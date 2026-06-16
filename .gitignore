@@ -1,0 +1,35 @@
+# Node.js
+node_modules/
+npm-debug.log
+*.log
+
+# Swift / Xcode
+*.xcworkspace
+xcuserdata/
+DerivedData/
+*.ipa
+*.dSYM.zip
+*.dSYM
+LoveTrack.xcodeproj/project.xcworkspace/
+LoveTrack.xcodeproj/xcuserdata/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDE
+.vscode/
+.idea/
+
+# Env
+.env
+.env.local
+
+# Archive
+*.zip
+*.tar.gz
+
+# Mavis (internal)
+.mavis/
+.opencode/

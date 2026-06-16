@@ -1,0 +1,20 @@
+{
+  "name": "lovetrack-backend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MVP backend for LoveTrack — in-memory, single-process, demo only",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "ws": "^8.18.0",
+    "cors": "^2.8.5",
+    "nanoid": "^3.3.7"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

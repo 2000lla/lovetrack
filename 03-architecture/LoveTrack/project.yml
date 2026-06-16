@@ -1,0 +1,71 @@
+name: LoveTrack
+options:
+  bundleIdPrefix: com.lovetrack
+  deploymentTarget:
+    iOS: "16.0"
+  createIntermediateGroups: true
+  defaultConfig: Debug
+  groupSortPosition: top
+  generateEmptyDirectories: true
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    IPHONEOS_DEPLOYMENT_TARGET: "16.0"
+    ENABLE_USER_SCRIPT_SANDBOXING: NO
+    SWIFT_STRICT_CONCURRENCY: minimal
+configs:
+  Debug: debug
+  Release: release
+targets:
+  LoveTrack:
+    type: application
+    platform: iOS
+    deploymentTarget: "16.0"
+    sources:
+      - path: App
+      - path: Location
+      - path: Map
+      - path: Models
+      - path: Network
+      - path: Relationship
+    info:
+      path: Info.plist
+      properties:
+        CFBundleShortVersionString: "0.1.0"
+        CFBundleVersion: "1"
+        CFBundleDevelopmentRegion: "zh_CN"
+        LSRequiresIPhoneOS: true
+        MinimumOSVersion: "16.0"
+        UILaunchScreen:
+          UIColorName: ""
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        # ---- CoreLocation 三件套 (iOS 16+) ----
+        # 见 architecture.md §5 App Store 审核合规
+        NSLocationWhenInUseUsageDescription: "我们需要在 App 打开时获取你的位置，用于显示你与伴侣的实时距离。位置数据仅在 App 运行时使用，不会用于广告。"
+        NSLocationAlwaysAndWhenInUseUsageDescription: '开启"始终"权限后，即便 App 在后台或锁屏，我们也能持续为你和伴侣更新位置，守护彼此安全。我们采用 Apple 推荐的 CoreLocation 后台服务模式，仅在位置发生显著变化时上报，不会持续高频采集。'
+        NSLocationAlwaysUsageDescription: "保留此字段以兼容 iOS 10 设备。我们仅在位置发生显著变化时上报位置，不会持续高频采集。"
+        # ---- 后台运行模式 ----
+        UIBackgroundModes:
+          - location
+          - fetch
+          - processing
+        BGTaskSchedulerPermittedIdentifiers:
+          - com.lovetrack.app.refresh
+        # ---- 高德 SDK Key (替换成真实值) ----
+        AMapAPIKey: YOUR_AMAP_KEY_REPLACE_ME
+        # ---- App Transport Security (允许明文 HTTP，连接到本地后端) ----
+        # 生产环境务必用 HTTPS，仅开发期允许任意加载
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoads: true
+          NSAllowsLocalNetworking: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.lovetrack.app
+        TARGETED_DEVICE_FAMILY: "1"
+        SUPPORTS_MACCATALYST: NO
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        DEVELOPMENT_TEAM: ""
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGNING_REQUIRED: YES
+        CODE_SIGNING_ALLOWED: YES

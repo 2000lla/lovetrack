@@ -1,0 +1,27 @@
+# ===============================================
+# LoveTrack Backend - 本地开发用 docker-compose
+# ===============================================
+# 启动: docker compose up -d
+# 查看日志: docker compose logs -f
+# 停止: docker compose down
+#
+# 服务跑在 http://localhost:3000
+# WebSocket: ws://localhost:3000/sync?userId=xxx
+# ===============================================
+
+services:
+  backend:
+    build: .
+    container_name: lovetrack-backend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/healthz"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
