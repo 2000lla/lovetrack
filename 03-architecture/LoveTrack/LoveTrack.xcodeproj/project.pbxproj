@@ -9,15 +9,28 @@
 /* Begin PBXBuildFile section */
 		0B71EA1C35F8D814C4FAFDDA /* RealtimeSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61BABD3C7C755736865989E6 /* RealtimeSyncService.swift */; };
 		10401A5CBAD478E0809B5F2D /* LocationPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD7C4BA5A75517C3DE20DEBE /* LocationPoint.swift */; };
+		117F97C913E6180711C83454 /* AppTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CCC21F446FF70E3AB14C142 /* AppTabView.swift */; };
+		1C23FB85C552538CFFFDEB36 /* MessageScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0D81AECC146ABEEC7E1331C /* MessageScreen.swift */; };
 		1E59E45A89B711F859F3DFE5 /* LoveTrackApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FB47A3867982204AD755A1A /* LoveTrackApp.swift */; };
 		20292F512D9B50FAA4E39C04 /* TrackSegment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0202C3F36ABC9A19E8740C32 /* TrackSegment.swift */; };
+		2AE945E1295D923EF9387FD8 /* PokeGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E4B581A31C847C038C3F4DE /* PokeGrid.swift */; };
+		30A264AC058BD5E9E46E914C /* LoveTrackBottomNav.swift in Sources */ = {isa = PBXBuildFile; fileRef = C917FB754891F0B061F628BA /* LoveTrackBottomNav.swift */; };
 		40B6E8ED36E8F01F9E59C5D4 /* BackgroundKeepAlive.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6ABE9F54A16143DF984C109F /* BackgroundKeepAlive.swift */; };
+		41B32D732B8930A9E5331650 /* StatusBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3C1083369611C38D94F69FE /* StatusBar.swift */; };
 		432C6B68388840851A73E96D /* TrackPlaybackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E96C50FC8FDCF32F32F905 /* TrackPlaybackView.swift */; };
+		45CDDB22662449F990B4630B /* RealtimeMapScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EB082D4841FCE74771E3437 /* RealtimeMapScreen.swift */; };
 		4839D646B5C2F897E13C2FAF /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42116C2688BFED53482EFE47 /* User.swift */; };
 		562FAEE839E6FDB744976EA7 /* MapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C2F94B07D1AE21249AFE60D /* MapView.swift */; };
 		5F9A3FB09B20F581FBC8DFBE /* PairScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF1A5BE1D43C62A5035A69AB /* PairScreen.swift */; };
+		613BF0CF0E79E88C77FC927E /* MiniMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A3710C64B1836E743DEF5D7 /* MiniMap.swift */; };
 		6D375B9DF8A7C34033B76CF1 /* HTTPRealtimeSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AF732A740A5765AF48ED449 /* HTTPRealtimeSyncService.swift */; };
 		741812B6C0BBF8B02D94746E /* Relationship.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E45E50BEA0363BF457C3ADD /* Relationship.swift */; };
+		74390E4950C6FFD0E2ABE87E /* ProfileScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7229BB8F8D8B3B95806C332D /* ProfileScreen.swift */; };
+		7CE8DBE25EF79BCE3DC2081F /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 742ACC6062ED5F1C10EE9301 /* Theme.swift */; };
+		9669F0FE3949011ED4DCABE4 /* DistanceCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61B29CF270C444925C414B38 /* DistanceCard.swift */; };
+		9DFB325B338DCFF767024A3C /* GuardScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80FB5C7F17531BBD72CC3CA6 /* GuardScreen.swift */; };
+		B55A8FA8D626D2D302E2E52A /* QuickCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6B6854682FE632BB84759B1 /* QuickCards.swift */; };
+		BCF21732A9A338AFB4219B0D /* PartnerHero.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37B3189E6CC5BEA3A8D0751C /* PartnerHero.swift */; };
 		D916CCDC2F4D0FDFB70E0C48 /* RelationshipStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E58C3CC1B9D6355C67A09D4 /* RelationshipStore.swift */; };
 		ECF6178BE0E414559F01D207 /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F24C9BE55E41D520BF8CE96 /* LocationManager.swift */; };
 		F1E4C98790A547234EF70FBE /* BackendConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70494358B4F87A7B6A38A1F9 /* BackendConfig.swift */; };
@@ -25,20 +38,33 @@
 
 /* Begin PBXFileReference section */
 		0202C3F36ABC9A19E8740C32 /* TrackSegment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackSegment.swift; sourceTree = "<group>"; };
+		0CCC21F446FF70E3AB14C142 /* AppTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTabView.swift; sourceTree = "<group>"; };
 		0FB47A3867982204AD755A1A /* LoveTrackApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoveTrackApp.swift; sourceTree = "<group>"; };
 		2E45E50BEA0363BF457C3ADD /* Relationship.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Relationship.swift; sourceTree = "<group>"; };
+		2E4B581A31C847C038C3F4DE /* PokeGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PokeGrid.swift; sourceTree = "<group>"; };
+		37B3189E6CC5BEA3A8D0751C /* PartnerHero.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PartnerHero.swift; sourceTree = "<group>"; };
 		3F24C9BE55E41D520BF8CE96 /* LocationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
 		42116C2688BFED53482EFE47 /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
 		49E96C50FC8FDCF32F32F905 /* TrackPlaybackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackPlaybackView.swift; sourceTree = "<group>"; };
 		5F60B0412AB3C93FCF06AF76 /* LoveTrack.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LoveTrack.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		61B29CF270C444925C414B38 /* DistanceCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DistanceCard.swift; sourceTree = "<group>"; };
 		61BABD3C7C755736865989E6 /* RealtimeSyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealtimeSyncService.swift; sourceTree = "<group>"; };
+		6A3710C64B1836E743DEF5D7 /* MiniMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MiniMap.swift; sourceTree = "<group>"; };
 		6ABE9F54A16143DF984C109F /* BackgroundKeepAlive.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundKeepAlive.swift; sourceTree = "<group>"; };
 		6AF732A740A5765AF48ED449 /* HTTPRealtimeSyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPRealtimeSyncService.swift; sourceTree = "<group>"; };
 		70494358B4F87A7B6A38A1F9 /* BackendConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackendConfig.swift; sourceTree = "<group>"; };
+		7229BB8F8D8B3B95806C332D /* ProfileScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileScreen.swift; sourceTree = "<group>"; };
+		742ACC6062ED5F1C10EE9301 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		7C2F94B07D1AE21249AFE60D /* MapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapView.swift; sourceTree = "<group>"; };
+		7EB082D4841FCE74771E3437 /* RealtimeMapScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealtimeMapScreen.swift; sourceTree = "<group>"; };
+		80FB5C7F17531BBD72CC3CA6 /* GuardScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuardScreen.swift; sourceTree = "<group>"; };
 		9E58C3CC1B9D6355C67A09D4 /* RelationshipStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelationshipStore.swift; sourceTree = "<group>"; };
+		A3C1083369611C38D94F69FE /* StatusBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBar.swift; sourceTree = "<group>"; };
+		B0D81AECC146ABEEC7E1331C /* MessageScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageScreen.swift; sourceTree = "<group>"; };
 		BD7C4BA5A75517C3DE20DEBE /* LocationPoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationPoint.swift; sourceTree = "<group>"; };
+		C917FB754891F0B061F628BA /* LoveTrackBottomNav.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoveTrackBottomNav.swift; sourceTree = "<group>"; };
 		CF1A5BE1D43C62A5035A69AB /* PairScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PairScreen.swift; sourceTree = "<group>"; };
+		D6B6854682FE632BB84759B1 /* QuickCards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickCards.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -106,6 +132,7 @@
 				1170EEA39CD31CBB6E251809 /* Models */,
 				5FDB1AC03BCE88C079063589 /* Network */,
 				6350AF5BC65EA2818C738FC5 /* Relationship */,
+				FBC5CF0AAC2BC39C3E6A5A6E /* UI */,
 				16D4DBFC2A6F784C9786752A /* Products */,
 			);
 			sourceTree = "<group>";
@@ -113,10 +140,30 @@
 		9BFB4353177E8820666DC761 /* App */ = {
 			isa = PBXGroup;
 			children = (
+				0CCC21F446FF70E3AB14C142 /* AppTabView.swift */,
+				80FB5C7F17531BBD72CC3CA6 /* GuardScreen.swift */,
 				0FB47A3867982204AD755A1A /* LoveTrackApp.swift */,
+				B0D81AECC146ABEEC7E1331C /* MessageScreen.swift */,
 				CF1A5BE1D43C62A5035A69AB /* PairScreen.swift */,
+				7229BB8F8D8B3B95806C332D /* ProfileScreen.swift */,
+				7EB082D4841FCE74771E3437 /* RealtimeMapScreen.swift */,
 			);
 			path = App;
+			sourceTree = "<group>";
+		};
+		FBC5CF0AAC2BC39C3E6A5A6E /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				61B29CF270C444925C414B38 /* DistanceCard.swift */,
+				C917FB754891F0B061F628BA /* LoveTrackBottomNav.swift */,
+				6A3710C64B1836E743DEF5D7 /* MiniMap.swift */,
+				37B3189E6CC5BEA3A8D0751C /* PartnerHero.swift */,
+				2E4B581A31C847C038C3F4DE /* PokeGrid.swift */,
+				D6B6854682FE632BB84759B1 /* QuickCards.swift */,
+				A3C1083369611C38D94F69FE /* StatusBar.swift */,
+				742ACC6062ED5F1C10EE9301 /* Theme.swift */,
+			);
+			path = UI;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -177,17 +224,30 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				117F97C913E6180711C83454 /* AppTabView.swift in Sources */,
 				F1E4C98790A547234EF70FBE /* BackendConfig.swift in Sources */,
 				40B6E8ED36E8F01F9E59C5D4 /* BackgroundKeepAlive.swift in Sources */,
+				9669F0FE3949011ED4DCABE4 /* DistanceCard.swift in Sources */,
+				9DFB325B338DCFF767024A3C /* GuardScreen.swift in Sources */,
 				6D375B9DF8A7C34033B76CF1 /* HTTPRealtimeSyncService.swift in Sources */,
 				ECF6178BE0E414559F01D207 /* LocationManager.swift in Sources */,
 				10401A5CBAD478E0809B5F2D /* LocationPoint.swift in Sources */,
 				1E59E45A89B711F859F3DFE5 /* LoveTrackApp.swift in Sources */,
+				30A264AC058BD5E9E46E914C /* LoveTrackBottomNav.swift in Sources */,
 				562FAEE839E6FDB744976EA7 /* MapView.swift in Sources */,
+				1C23FB85C552538CFFFDEB36 /* MessageScreen.swift in Sources */,
+				613BF0CF0E79E88C77FC927E /* MiniMap.swift in Sources */,
 				5F9A3FB09B20F581FBC8DFBE /* PairScreen.swift in Sources */,
+				BCF21732A9A338AFB4219B0D /* PartnerHero.swift in Sources */,
+				2AE945E1295D923EF9387FD8 /* PokeGrid.swift in Sources */,
+				74390E4950C6FFD0E2ABE87E /* ProfileScreen.swift in Sources */,
+				B55A8FA8D626D2D302E2E52A /* QuickCards.swift in Sources */,
+				45CDDB22662449F990B4630B /* RealtimeMapScreen.swift in Sources */,
 				0B71EA1C35F8D814C4FAFDDA /* RealtimeSyncService.swift in Sources */,
 				741812B6C0BBF8B02D94746E /* Relationship.swift in Sources */,
 				D916CCDC2F4D0FDFB70E0C48 /* RelationshipStore.swift in Sources */,
+				41B32D732B8930A9E5331650 /* StatusBar.swift in Sources */,
+				7CE8DBE25EF79BCE3DC2081F /* Theme.swift in Sources */,
 				432C6B68388840851A73E96D /* TrackPlaybackView.swift in Sources */,
 				20292F512D9B50FAA4E39C04 /* TrackSegment.swift in Sources */,
 				4839D646B5C2F897E13C2FAF /* User.swift in Sources */,

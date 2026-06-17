@@ -171,76 +171,93 @@ struct RootView: View {
     @EnvironmentObject var store: RelationshipStore
 
     var body: some View {
+        // DEBUG 编译：默认走 PairScreen（用户能看见配对页）
+        //   输任意 6 位数字 + 绑定 → DevMock 触发配对成功进主页
+        //   设环境变量 LOVETRACK_SKIP_PAIR=1 → 跳过配对直接进主页
+        // Release 编译：必须走完真配对才能进主页
+        #if DEBUG
+        if ProcessInfo.processInfo.environment["LOVETRACK_SKIP_PAIR"] == "1" {
+            mainTabs
+                .onAppear {
+                    DevMock.bootstrapIfNeeded(session: session, store: store)
+                }
+        } else {
+            if session.isPaired || store.isPaired {
+                mainTabs
+            } else {
+                PairScreen()
+            }
+        }
+        #else
         if session.isPaired || store.isPaired {
             mainTabs
         } else {
             PairScreen()
         }
+        #endif
     }
 
     private var mainTabs: some View {
-        TabView {
-            RealtimeMapScreen()
-                .tabItem { Label("定位", systemImage: "location.fill") }
-            TrackPlaybackScreen()
-                .tabItem { Label("轨迹", systemImage: "map.fill") }
-            SettingsScreen()
-                .tabItem { Label("设置", systemImage: "gearshape.fill") }
-        }
-        .tint(.purple)
+        // 4 tabs 完整 UI（守护 / 位置 / 消息 / 我的）
+        AppTabView()
     }
 }
 
-struct RealtimeMapScreen: View {
-    @EnvironmentObject var session: AppSession
-    @EnvironmentObject var store: RelationshipStore
+/// 开发期 mock — 在 DEBUG 编译、且没配对时,自动给一份假伴侣+假位置,方便看 UI
+enum DevMock {
+    @MainActor
+    static func bootstrapIfNeeded(session: AppSession, store: RelationshipStore) {
+        guard !session.isPaired, !store.isPaired else { return }
 
-    var body: some View {
-        let center = session.lastLocation?.coordinate
-            ?? CLLocationCoordinate2D(latitude: 36.6512, longitude: 117.1201)
-        let partner = store.lastKnownPartnerLocation
-        var annotations: [MapView.Annotation] = []
-        if let p = partner {
-            annotations.append(.init(
-                id: "partner",
-                coordinate: .init(latitude: p.lat, longitude: p.lon),
-                title: store.partner?.displayName ?? "伴侣",
-                iconSystemName: "heart.circle.fill"
-            ))
-        }
-        return VStack(spacing: 0) {
-            partnerHeader
-            MapView(center: center, annotations: annotations, showsUserLocation: true)
-        }
-    }
+        // 1. 标记配对完成
+        session.isPaired = true
 
-    @ViewBuilder
-    private var partnerHeader: some View {
-        if let partner = store.partner,
-           let p = store.lastKnownPartnerLocation {
-            let dist = store.distanceKmToPartner(myLocation: session.lastLocation)
-            HStack {
-                VStack(alignment: .leading) {
-                    Text(partner.displayName).font(.headline)
-                    Text(String(format: "距离 %.2f km", dist ?? 0))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                Spacer()
-                Text(String(format: "电量 %.0f%%", (p.battery?.level ?? 1) * 100))
-                    .font(.caption.monospacedDigit())
-            }
-            .padding(16)
-        } else {
-            HStack {
-                Text("未配对")
-                    .font(.headline)
-                Spacer()
-            }
-            .padding(16)
-        }
+        // 2. 注入 mock 伴侣
+        let mockPartnerId = "mock-partner-001"
+        let mockPartner = User(
+            id: mockPartnerId,
+            displayName: "小月亮",
+            avatarURL: nil
+        )
+
+        // 3. 注入 mock 位置（济南历城区 — 跟原型地图一致）
+        let mockLocation = LocationPoint(
+            userId: mockPartnerId,
+            lat: 36.6512,          // 历城区
+            lon: 117.1201,
+            altitude: nil,
+            horizontalAccuracy: 5.0,
+            verticalAccuracy: nil,
+            speed: 0,
+            course: 0,
+            timestamp: Date().addingTimeInterval(-60), // 1 分钟前
+            receivedAt: Date(),
+            battery: BatteryInfo(level: 0.78, isCharging: false, isLowPower: false),
+            source: .gps,
+            sessionId: "mock-session"
+        )
+
+        // 4. 注入"我"的当前位置（山大科技产业园 — 跟伴侣距离 1.2km）
+        let myLocation = CLLocation(
+            coordinate: CLLocationCoordinate2D(latitude: 36.6640, longitude: 117.1280),
+            altitude: 0,
+            horizontalAccuracy: 5.0,
+            verticalAccuracy: -1,
+            course: 0,
+            speed: 0,
+            timestamp: Date()
+        )
+
+        store.partner = mockPartner
+        store.isPaired = true
+        store.lastKnownPartnerLocation = mockLocation
+        session.lastLocation = myLocation
+
+        print("[DevMock] ✅ mock 伴侣 + 位置已注入,直接进主页调试")
     }
 }
+
+// RealtimeMapScreen 已在 App/RealtimeMapScreen.swift 定义（高保真复刻原型）
 
 struct TrackPlaybackScreen: View {
     @EnvironmentObject var session: AppSession

@@ -28,6 +28,7 @@ targets:
       - path: Models
       - path: Network
       - path: Relationship
+      - path: UI
     info:
       path: Info.plist
       properties:

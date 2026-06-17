@@ -235,6 +235,13 @@ public struct PairScreen: View {
         errorMessage = nil
         defer { isLoading = false }
 
+        #if DEBUG
+        // DEBUG 模式：本地直接生成 6 位码,不走后端
+        let code = String(format: "%06d", Int.random(in: 0..<1_000_000))
+        inviteCode = code
+        mode = .create
+        return
+        #else
         do {
             // 走 RelationshipStore 让 store 正确记录 pending 关系 + isPaired = true
             let code = try await session.relationshipStore.generatePairCode()
@@ -243,12 +250,22 @@ public struct PairScreen: View {
         } catch {
             errorMessage = "创建失败: \(error.localizedDescription)"
         }
+        #endif
     }
 
     private func joinWithCode() async {
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }
+
+        #if DEBUG
+        // DEBUG 模式：输任意 6 位 → 触发 DevMock 配对,跳过真后端
+        if inputCode.count == 6 {
+            DevMock.bootstrapIfNeeded(session: session, store: session.relationshipStore)
+            session.completePairing()
+            return
+        }
+        #endif
 
         do {
             // 走 RelationshipStore 让它正确刷 isPaired / 订阅 partner
