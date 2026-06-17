@@ -7,6 +7,7 @@ npm-debug.log
 *.xcworkspace
 xcuserdata/
 DerivedData/
+build/
 *.ipa
 *.dSYM.zip
 *.dSYM
@@ -25,6 +26,16 @@ LoveTrack.xcodeproj/xcuserdata/
 # Env
 .env
 .env.local
+
+# Secrets / API Keys (per-developer)
+Secrets.xcconfig
+Secrets.local.xcconfig
+*.xcconfig.local
+03-architecture/LoveTrack/Secrets.xcconfig
+
+# Vendor SDKs (download separately, too large for git)
+03-architecture/LoveTrack/Vendor/AMap/*.framework
+03-architecture/LoveTrack/Vendor/AMap/Downloads/
 
 # Archive
 *.zip
