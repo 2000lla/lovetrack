@@ -2,7 +2,7 @@ import SwiftUI
 import CoreLocation
 
 /// 实时定位主页 — 复刻原型 love-location.html
-/// 结构: Status bar → PartnerHero → MiniMap → DistanceCard → PokeGrid → QuickCards → BottomNav
+/// 结构: Status bar → PartnerHero → 地图(高德真地图/MiniMap Canvas) → DistanceCard → PokeGrid → QuickCards → BottomNav
 public struct RealtimeMapScreen: View {
     @EnvironmentObject var session: AppSession
     @EnvironmentObject var store: RelationshipStore
@@ -31,12 +31,11 @@ public struct RealtimeMapScreen: View {
             LinearGradient(
                 stops: [
                     .init(color: Color(red: 1.00, green: 0.84, blue: 0.91).opacity(0.55), location: 0.0),
-                    .init(color: Color.clear, location: 0.5),
+                    .init(color: .clear, location: 0.5),
                     .init(color: Color(red: 0.91, green: 0.84, blue: 1.00).opacity(0.55), location: 1.0),
                 ],
                 startPoint: .topLeading, endPoint: .bottomTrailing
             )
-            // 背景表情装饰
             backgroundStickers
         }
         .ignoresSafeArea()
@@ -80,11 +79,7 @@ public struct RealtimeMapScreen: View {
                     batteryPercent: Int(((store.lastKnownPartnerLocation?.battery?.level ?? 0.78) * 100).rounded()),
                     networkLabel: "5G · WiFi"
                 )
-                MiniMap(
-                    partnerName: store.partner?.displayName ?? "小月亮",
-                    partnerAvatar: "👧🏻",
-                    lastUpdatedText: "1 分钟前更新"
-                )
+                mapSection
                 DistanceCard(
                     locationEnabled: $locationEnabled,
                     distanceMeters: distanceMeters,
@@ -108,6 +103,30 @@ public struct RealtimeMapScreen: View {
         }
         .scrollIndicators(.hidden)
     }
+
+    // MARK: - 地图区: 有 SDK 走真地图, 否则 Canvas 占位
+
+    @ViewBuilder
+    private var mapSection: some View {
+        if AAMapBootstrap.isAvailable, let center = mapCenter {
+            AAMapView(
+                center: center,
+                partner: mapPartner,
+                me: mapMe
+            )
+            .frame(height: 320)
+            .clipShape(RoundedRectangle(cornerRadius: Theme.radius2xl, style: .continuous))
+            .softShadow(Theme.shadowMd)
+        } else {
+            MiniMap(
+                partnerName: store.partner?.displayName ?? "小月亮",
+                partnerAvatar: "👧🏻",
+                lastUpdatedText: "1 分钟前更新"
+            )
+        }
+    }
+
+    // MARK: - Toast
 
     private var toastLayer: some View {
         VStack {
@@ -143,6 +162,35 @@ public struct RealtimeMapScreen: View {
     }
 
     // MARK: - Helpers
+
+    /// 地图中心点: 优先用对方位置, 没有则用我自己的位置
+    private var mapCenter: CLLocationCoordinate2D? {
+        if let p = store.lastKnownPartnerLocation {
+            return CLLocationCoordinate2D(latitude: p.lat, longitude: p.lon)
+        }
+        if let me = session.lastLocation {
+            return me.coordinate
+        }
+        return nil
+    }
+
+    private var mapPartner: MapPerson? {
+        guard let p = store.lastKnownPartnerLocation else { return nil }
+        return MapPerson(
+            id: p.userId,
+            name: store.partner?.displayName ?? "TA",
+            coordinate: CLLocationCoordinate2D(latitude: p.lat, longitude: p.lon)
+        )
+    }
+
+    private var mapMe: MapPerson? {
+        guard let me = session.lastLocation else { return nil }
+        return MapPerson(
+            id: session.currentUser.id,
+            name: "我",
+            coordinate: me.coordinate
+        )
+    }
 
     private var distanceMeters: Int? {
         guard let km = store.distanceKmToPartner(myLocation: session.lastLocation) else {

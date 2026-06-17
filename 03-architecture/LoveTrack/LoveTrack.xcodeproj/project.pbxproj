@@ -7,46 +7,80 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		03AC97CE97C01D072061353D /* AMapFoundationKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 5CA24D83B6DD63D59DEEBD5E /* AMapFoundationKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		05DC8B5CB22585D4D3EE7483 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 5A1882AD7D7A1EB2100B34BD /* libc++.tbd */; };
+		07B5EB0FD85992BA6EB87D58 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = D1C8D2480CE665A2777C2CE9 /* libz.tbd */; };
+		08A98127A8655A0FE0DF846F /* MAMapKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2EF972C51E054E15E3EBAE5F /* MAMapKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		0998FA1105FCF42B22AD9A07 /* CoreLocation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5A8A73EF4D8C76B0AB93D149 /* CoreLocation.framework */; };
 		0B71EA1C35F8D814C4FAFDDA /* RealtimeSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61BABD3C7C755736865989E6 /* RealtimeSyncService.swift */; };
 		10401A5CBAD478E0809B5F2D /* LocationPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD7C4BA5A75517C3DE20DEBE /* LocationPoint.swift */; };
 		117F97C913E6180711C83454 /* AppTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CCC21F446FF70E3AB14C142 /* AppTabView.swift */; };
+		1524C041AA62483828A57A11 /* AAMapBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6C3C4C0226C5DBA06E50283 /* AAMapBootstrap.swift */; };
 		1C23FB85C552538CFFFDEB36 /* MessageScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0D81AECC146ABEEC7E1331C /* MessageScreen.swift */; };
 		1E59E45A89B711F859F3DFE5 /* LoveTrackApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FB47A3867982204AD755A1A /* LoveTrackApp.swift */; };
 		20292F512D9B50FAA4E39C04 /* TrackSegment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0202C3F36ABC9A19E8740C32 /* TrackSegment.swift */; };
 		2AE945E1295D923EF9387FD8 /* PokeGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E4B581A31C847C038C3F4DE /* PokeGrid.swift */; };
 		30A264AC058BD5E9E46E914C /* LoveTrackBottomNav.swift in Sources */ = {isa = PBXBuildFile; fileRef = C917FB754891F0B061F628BA /* LoveTrackBottomNav.swift */; };
+		3AC58F5C0285E9C1FB5BBB17 /* GLKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 94A895BC5C985DC4D0C5B385 /* GLKit.framework */; };
 		40B6E8ED36E8F01F9E59C5D4 /* BackgroundKeepAlive.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6ABE9F54A16143DF984C109F /* BackgroundKeepAlive.swift */; };
 		41B32D732B8930A9E5331650 /* StatusBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3C1083369611C38D94F69FE /* StatusBar.swift */; };
 		432C6B68388840851A73E96D /* TrackPlaybackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E96C50FC8FDCF32F32F905 /* TrackPlaybackView.swift */; };
 		45CDDB22662449F990B4630B /* RealtimeMapScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EB082D4841FCE74771E3437 /* RealtimeMapScreen.swift */; };
 		4839D646B5C2F897E13C2FAF /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42116C2688BFED53482EFE47 /* User.swift */; };
+		4E94D19E81565CED4475E054 /* MAMapKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2EF972C51E054E15E3EBAE5F /* MAMapKit.framework */; };
 		562FAEE839E6FDB744976EA7 /* MapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C2F94B07D1AE21249AFE60D /* MapView.swift */; };
 		5F9A3FB09B20F581FBC8DFBE /* PairScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF1A5BE1D43C62A5035A69AB /* PairScreen.swift */; };
 		613BF0CF0E79E88C77FC927E /* MiniMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A3710C64B1836E743DEF5D7 /* MiniMap.swift */; };
 		6D375B9DF8A7C34033B76CF1 /* HTTPRealtimeSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AF732A740A5765AF48ED449 /* HTTPRealtimeSyncService.swift */; };
 		741812B6C0BBF8B02D94746E /* Relationship.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E45E50BEA0363BF457C3ADD /* Relationship.swift */; };
 		74390E4950C6FFD0E2ABE87E /* ProfileScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7229BB8F8D8B3B95806C332D /* ProfileScreen.swift */; };
+		76A1EADABC52CB01ED44C2D1 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2B7F8F9794E1934FF02F97A0 /* SystemConfiguration.framework */; };
 		7CE8DBE25EF79BCE3DC2081F /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 742ACC6062ED5F1C10EE9301 /* Theme.swift */; };
 		9669F0FE3949011ED4DCABE4 /* DistanceCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61B29CF270C444925C414B38 /* DistanceCard.swift */; };
+		994FF4578C0912D4603A3C08 /* AAMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C758DCD42E7A809B7A791566 /* AAMapView.swift */; };
 		9DFB325B338DCFF767024A3C /* GuardScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80FB5C7F17531BBD72CC3CA6 /* GuardScreen.swift */; };
 		B55A8FA8D626D2D302E2E52A /* QuickCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6B6854682FE632BB84759B1 /* QuickCards.swift */; };
 		BCF21732A9A338AFB4219B0D /* PartnerHero.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37B3189E6CC5BEA3A8D0751C /* PartnerHero.swift */; };
 		D916CCDC2F4D0FDFB70E0C48 /* RelationshipStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E58C3CC1B9D6355C67A09D4 /* RelationshipStore.swift */; };
+		E2C844CFE8976EAE96CE51BF /* OpenGLES.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 21AF2ADF42B14EDD2E2858F8 /* OpenGLES.framework */; };
+		E456A64B128FC04C0CAF3117 /* CoreTelephony.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A316266EAD04B5E5789048F0 /* CoreTelephony.framework */; };
+		E9046617ABAAFFB3C09DBB11 /* AMapFoundationKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5CA24D83B6DD63D59DEEBD5E /* AMapFoundationKit.framework */; };
 		ECF6178BE0E414559F01D207 /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F24C9BE55E41D520BF8CE96 /* LocationManager.swift */; };
 		F1E4C98790A547234EF70FBE /* BackendConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70494358B4F87A7B6A38A1F9 /* BackendConfig.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		5C93DA13315C9E1B0A1240F9 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				08A98127A8655A0FE0DF846F /* MAMapKit.framework in Embed Frameworks */,
+				03AC97CE97C01D072061353D /* AMapFoundationKit.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		0202C3F36ABC9A19E8740C32 /* TrackSegment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackSegment.swift; sourceTree = "<group>"; };
 		0CCC21F446FF70E3AB14C142 /* AppTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTabView.swift; sourceTree = "<group>"; };
 		0FB47A3867982204AD755A1A /* LoveTrackApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoveTrackApp.swift; sourceTree = "<group>"; };
+		21AF2ADF42B14EDD2E2858F8 /* OpenGLES.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGLES.framework; path = System/Library/Frameworks/OpenGLES.framework; sourceTree = SDKROOT; };
+		2B7F8F9794E1934FF02F97A0 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
 		2E45E50BEA0363BF457C3ADD /* Relationship.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Relationship.swift; sourceTree = "<group>"; };
 		2E4B581A31C847C038C3F4DE /* PokeGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PokeGrid.swift; sourceTree = "<group>"; };
+		2EF972C51E054E15E3EBAE5F /* MAMapKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MAMapKit.framework; path = Vendor/AMap/MAMapKit.framework; sourceTree = "<group>"; };
 		37B3189E6CC5BEA3A8D0751C /* PartnerHero.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PartnerHero.swift; sourceTree = "<group>"; };
 		3F24C9BE55E41D520BF8CE96 /* LocationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
 		42116C2688BFED53482EFE47 /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
 		49E96C50FC8FDCF32F32F905 /* TrackPlaybackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackPlaybackView.swift; sourceTree = "<group>"; };
-		5F60B0412AB3C93FCF06AF76 /* LoveTrack.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LoveTrack.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5A1882AD7D7A1EB2100B34BD /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "usr/lib/libc++.tbd"; sourceTree = SDKROOT; };
+		5A8A73EF4D8C76B0AB93D149 /* CoreLocation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreLocation.framework; path = System/Library/Frameworks/CoreLocation.framework; sourceTree = SDKROOT; };
+		5CA24D83B6DD63D59DEEBD5E /* AMapFoundationKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AMapFoundationKit.framework; path = Vendor/AMap/AMapFoundationKit.framework; sourceTree = "<group>"; };
+		5F60B0412AB3C93FCF06AF76 /* LoveTrack.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = LoveTrack.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		61B29CF270C444925C414B38 /* DistanceCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DistanceCard.swift; sourceTree = "<group>"; };
 		61BABD3C7C755736865989E6 /* RealtimeSyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealtimeSyncService.swift; sourceTree = "<group>"; };
 		6A3710C64B1836E743DEF5D7 /* MiniMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MiniMap.swift; sourceTree = "<group>"; };
@@ -58,14 +92,39 @@
 		7C2F94B07D1AE21249AFE60D /* MapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapView.swift; sourceTree = "<group>"; };
 		7EB082D4841FCE74771E3437 /* RealtimeMapScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealtimeMapScreen.swift; sourceTree = "<group>"; };
 		80FB5C7F17531BBD72CC3CA6 /* GuardScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuardScreen.swift; sourceTree = "<group>"; };
+		94A895BC5C985DC4D0C5B385 /* GLKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLKit.framework; path = System/Library/Frameworks/GLKit.framework; sourceTree = SDKROOT; };
 		9E58C3CC1B9D6355C67A09D4 /* RelationshipStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelationshipStore.swift; sourceTree = "<group>"; };
+		A316266EAD04B5E5789048F0 /* CoreTelephony.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreTelephony.framework; path = System/Library/Frameworks/CoreTelephony.framework; sourceTree = SDKROOT; };
 		A3C1083369611C38D94F69FE /* StatusBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBar.swift; sourceTree = "<group>"; };
 		B0D81AECC146ABEEC7E1331C /* MessageScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageScreen.swift; sourceTree = "<group>"; };
 		BD7C4BA5A75517C3DE20DEBE /* LocationPoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationPoint.swift; sourceTree = "<group>"; };
+		C6C3C4C0226C5DBA06E50283 /* AAMapBootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AAMapBootstrap.swift; sourceTree = "<group>"; };
+		C758DCD42E7A809B7A791566 /* AAMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AAMapView.swift; sourceTree = "<group>"; };
 		C917FB754891F0B061F628BA /* LoveTrackBottomNav.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoveTrackBottomNav.swift; sourceTree = "<group>"; };
 		CF1A5BE1D43C62A5035A69AB /* PairScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PairScreen.swift; sourceTree = "<group>"; };
+		D1C8D2480CE665A2777C2CE9 /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
 		D6B6854682FE632BB84759B1 /* QuickCards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickCards.swift; sourceTree = "<group>"; };
+		"TEMP_97F38CCA-C6B5-486A-9CB8-508EC8008972" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		9D1426791D24E9CCCE666C20 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4E94D19E81565CED4475E054 /* MAMapKit.framework in Frameworks */,
+				E9046617ABAAFFB3C09DBB11 /* AMapFoundationKit.framework in Frameworks */,
+				05DC8B5CB22585D4D3EE7483 /* libc++.tbd in Frameworks */,
+				76A1EADABC52CB01ED44C2D1 /* SystemConfiguration.framework in Frameworks */,
+				0998FA1105FCF42B22AD9A07 /* CoreLocation.framework in Frameworks */,
+				3AC58F5C0285E9C1FB5BBB17 /* GLKit.framework in Frameworks */,
+				E2C844CFE8976EAE96CE51BF /* OpenGLES.framework in Frameworks */,
+				E456A64B128FC04C0CAF3117 /* CoreTelephony.framework in Frameworks */,
+				07B5EB0FD85992BA6EB87D58 /* libz.tbd in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		1170EEA39CD31CBB6E251809 /* Models */ = {
@@ -90,6 +149,8 @@
 		22496CAC90243E7A898386B4 /* Map */ = {
 			isa = PBXGroup;
 			children = (
+				C6C3C4C0226C5DBA06E50283 /* AAMapBootstrap.swift */,
+				C758DCD42E7A809B7A791566 /* AAMapView.swift */,
 				7C2F94B07D1AE21249AFE60D /* MapView.swift */,
 				49E96C50FC8FDCF32F32F905 /* TrackPlaybackView.swift */,
 			);
@@ -133,8 +194,25 @@
 				5FDB1AC03BCE88C079063589 /* Network */,
 				6350AF5BC65EA2818C738FC5 /* Relationship */,
 				FBC5CF0AAC2BC39C3E6A5A6E /* UI */,
+				9923AF383B19D2EC8C1EF5E8 /* Frameworks */,
 				16D4DBFC2A6F784C9786752A /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		9923AF383B19D2EC8C1EF5E8 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				5CA24D83B6DD63D59DEEBD5E /* AMapFoundationKit.framework */,
+				5A8A73EF4D8C76B0AB93D149 /* CoreLocation.framework */,
+				A316266EAD04B5E5789048F0 /* CoreTelephony.framework */,
+				94A895BC5C985DC4D0C5B385 /* GLKit.framework */,
+				5A1882AD7D7A1EB2100B34BD /* libc++.tbd */,
+				D1C8D2480CE665A2777C2CE9 /* libz.tbd */,
+				2EF972C51E054E15E3EBAE5F /* MAMapKit.framework */,
+				21AF2ADF42B14EDD2E2858F8 /* OpenGLES.framework */,
+				2B7F8F9794E1934FF02F97A0 /* SystemConfiguration.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 		9BFB4353177E8820666DC761 /* App */ = {
@@ -166,6 +244,14 @@
 			path = UI;
 			sourceTree = "<group>";
 		};
+		"TEMP_075A92B3-565C-45CE-9230-518E4D389999" /* LoveTrack */ = {
+			isa = PBXGroup;
+			children = (
+				"TEMP_97F38CCA-C6B5-486A-9CB8-508EC8008972" /* Secrets.xcconfig */,
+			);
+			path = LoveTrack;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -174,6 +260,8 @@
 			buildConfigurationList = 796BDBC9375EE566BE49FE91 /* Build configuration list for PBXNativeTarget "LoveTrack" */;
 			buildPhases = (
 				7F0D6B4332AAE895B5C9C7A8 /* Sources */,
+				9D1426791D24E9CCCE666C20 /* Frameworks */,
+				5C93DA13315C9E1B0A1240F9 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -196,6 +284,7 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					9E31ED3765AA754F046866E3 = {
+						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -224,6 +313,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1524C041AA62483828A57A11 /* AAMapBootstrap.swift in Sources */,
+				994FF4578C0912D4603A3C08 /* AAMapView.swift in Sources */,
 				117F97C913E6180711C83454 /* AppTabView.swift in Sources */,
 				F1E4C98790A547234EF70FBE /* BackendConfig.swift in Sources */,
 				40B6E8ED36E8F01F9E59C5D4 /* BackgroundKeepAlive.swift in Sources */,
@@ -259,19 +350,27 @@
 /* Begin XCBuildConfiguration section */
 		06C47BC201E29B26C7188934 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = "TEMP_97F38CCA-C6B5-486A-9CB8-508EC8008972" /* Secrets.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGNING_ALLOWED = YES;
 				CODE_SIGNING_REQUIRED = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 2CG772X26Z;
+				DEVELOPMENT_TEAM = "";
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = arm64;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"Vendor/AMap\"",
+				);
 				INFOPLIST_FILE = Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				"ONLY_ACTIVE_ARCH[config=Debug]" = YES;
+				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = com.lovetrack.app;
 				SDKROOT = iphoneos;
 				SUPPORTS_MACCATALYST = NO;
@@ -404,19 +503,27 @@
 		};
 		AE11C7A22C4F4DA17B1064AB /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = "TEMP_97F38CCA-C6B5-486A-9CB8-508EC8008972" /* Secrets.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGNING_ALLOWED = YES;
 				CODE_SIGNING_REQUIRED = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 2CG772X26Z;
+				DEVELOPMENT_TEAM = "";
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = arm64;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"Vendor/AMap\"",
+				);
 				INFOPLIST_FILE = Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				"ONLY_ACTIVE_ARCH[config=Debug]" = YES;
+				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = com.lovetrack.app;
 				SDKROOT = iphoneos;
 				SUPPORTS_MACCATALYST = NO;

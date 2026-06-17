@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>AMapAPIKey</key>
-	<string>YOUR_AMAP_KEY_REPLACE_ME</string>
+	<string>$(AMAP_API_KEY)</string>
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
 		<string>com.lovetrack.app.refresh</string>

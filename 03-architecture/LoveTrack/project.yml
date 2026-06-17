@@ -16,6 +16,22 @@ settings:
 configs:
   Debug: debug
   Release: release
+# xcodegen 默认不自动生成 scheme, 显式声明避免每次 generate 覆盖 Xcode user scheme
+schemes:
+  LoveTrack:
+    build:
+      targets:
+        LoveTrack: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
 targets:
   LoveTrack:
     type: application
@@ -29,6 +45,32 @@ targets:
       - path: Network
       - path: Relationship
       - path: UI
+    # Secrets (API keys 等) 走独立 xcconfig，已 gitignore
+    # 缺失时 xcodegen 仍能 generate, 但编译会因 key 为空失败
+    configFiles:
+      Debug: Secrets.xcconfig
+      Release: Secrets.xcconfig
+    # 第三方 SDK framework (手动集成, 不走 CocoaPods/SPM)
+    # 同步需在 Vendor/AMap/ 下放置 .framework 二进制
+    dependencies:
+      - framework: Vendor/AMap/MAMapKit.framework
+        embed: true
+      - framework: Vendor/AMap/AMapFoundationKit.framework
+        embed: true
+      # 高德 framework 用了 C++ 标准库和 nlohmann json, 需要 link libc++
+      - sdk: libc++.tbd
+      # 高德用了 WiFi 定位 (CNCopyCurrentNetworkInfo 等), 需要 SystemConfiguration
+      - sdk: SystemConfiguration.framework
+      # CoreLocation 已在 Info.plist 声明, link 一下以防 SDK 内部依赖
+      - sdk: CoreLocation.framework
+      # 高德 3D 地图用了 OpenGL ES (GLKMatrix4Identity 等), 需要 GLKit
+      - sdk: GLKit.framework
+      # GLKit 依赖 OpenGLES
+      - sdk: OpenGLES.framework
+      # 高德用了运营商信息定位 (CTTelephonyNetworkInfo)
+      - sdk: CoreTelephony.framework
+      # 高德需要 zlib (libz) 压缩
+      - sdk: libz.tbd
     info:
       path: Info.plist
       properties:
@@ -53,8 +95,8 @@ targets:
           - processing
         BGTaskSchedulerPermittedIdentifiers:
           - com.lovetrack.app.refresh
-        # ---- 高德 SDK Key (替换成真实值) ----
-        AMapAPIKey: YOUR_AMAP_KEY_REPLACE_ME
+        # ---- 高德 SDK Key (从 Secrets.xcconfig 注入, 不进 git) ----
+        AMapAPIKey: $(AMAP_API_KEY)
         # ---- App Transport Security (允许明文 HTTP，连接到本地后端) ----
         # 生产环境务必用 HTTPS，仅开发期允许任意加载
         NSAppTransportSecurity:
@@ -70,3 +112,11 @@ targets:
         CODE_SIGN_STYLE: Automatic
         CODE_SIGNING_REQUIRED: YES
         CODE_SIGNING_ALLOWED: YES
+        # 高德 SDK 用了 Objective-C 类别(category), 必须 -ObjC 才能让所有符号被链接
+        OTHER_LDFLAGS: "-ObjC"
+        # 高德 MAMapKit.framework 暂未提供 arm64-simulator slice (2026-06 下载的版本)
+        # 在 Apple Silicon Mac 上 iOS Simulator 默认走 arm64-simulator, 链接会失败
+        # 临时方案: 模拟器只编 x86_64 (Rosetta), 真机走 arm64
+        # 解决路径: 升级到带 arm64-simulator 的 SDK 版本 (Sprint 2 跟进)
+        "EXCLUDED_ARCHS[sdk=iphonesimulator*]": arm64
+        "ONLY_ACTIVE_ARCH[config=Debug]": YES

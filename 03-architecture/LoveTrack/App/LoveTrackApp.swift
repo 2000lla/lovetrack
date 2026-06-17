@@ -10,6 +10,8 @@ struct LoveTrackApp: App {
     init() {
         // 必须在 launch 完成前注册 BGTask
         BackgroundKeepAlive.registerBackgroundTasks()
+        // 启动时一次性初始化高德 SDK (失败时静默, MapView 走 fallback)
+        AAMapBootstrap.bootstrap()
     }
 
     var body: some Scene {
