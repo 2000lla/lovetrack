@@ -159,7 +159,7 @@ private struct BurstParticle: Identifiable {
 
 #Preview {
     PokeGrid(partnerName: "小月亮") { item in
-        print("poke: \(item.name)")
+        Log.info("PokeGrid", "poke: \(item.name)")
     }
     .padding()
     .background(Theme.bgGradient)

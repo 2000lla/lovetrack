@@ -10,8 +10,7 @@ struct LoveTrackApp: App {
     init() {
         // 必须在 launch 完成前注册 BGTask
         BackgroundKeepAlive.registerBackgroundTasks()
-        // 启动时一次性初始化高德 SDK (失败时静默, MapView 走 fallback)
-        AAMapBootstrap.bootstrap()
+        // MapKit 不需要手动初始化,系统自带
     }
 
     var body: some Scene {
@@ -24,7 +23,7 @@ struct LoveTrackApp: App {
                     do {
                         try await session.bootstrap()
                     } catch {
-                        print("[LoveTrackApp] bootstrap failed: \(error)")
+                        Log.error("LoveTrackApp", "bootstrap failed: \(error)")
                     }
                 }
         }
@@ -84,7 +83,7 @@ final class AppSession: ObservableObject {
                     self.isPaired = true
                     self.relationshipStore.partner = User(id: inviteeId, displayName: "伴侣")
                     self.relationshipStore.isPaired = true
-                    print("[AppSession] pair_success → auto-transitioning to main, inviteeId=\(inviteeId)")
+                    Log.info("AppSession", "pair_success → auto-transitioning to main, inviteeId=\(inviteeId)")
                     // 配对成功后立即拉一次对方位置（不等 15s 轮询）
                     Task { await self.pollPartnerLocationOnce() }
                 }
@@ -98,7 +97,7 @@ final class AppSession: ObservableObject {
         if let rel = relationship {
             currentRelationship = rel
         }
-        print("[AppSession] completePairing called, isPaired=\(isPaired)")
+        Log.info("AppSession", "completePairing called, isPaired=\(isPaired)")
     }
 
     func bootstrap() async {
@@ -135,7 +134,7 @@ final class AppSession: ObservableObject {
                 )
                 try? await self.realtime.uploadPoint(point)
                 self.lastLocation = event.location
-                print("[AppSession] 📍 上传位置: \(point.lat), \(point.lon) (mode=\(event.mode.rawValue), hp=\(Int(point.horizontalAccuracy))m)")
+                Log.info("AppSession", "📍 上传位置: \(point.lat), \(point.lon) (mode=\(event.mode.rawValue), hp=\(Int(point.horizontalAccuracy))m)")
             }
         }
         // 5. 按用户选的档位启动定位
@@ -154,10 +153,10 @@ final class AppSession: ObservableObject {
         let profile = locationProfile(for: guardSettings.mode)
         if guardSettings.isPaused || guardSettings.mode == .off {
             Task { await locationManager.pause() }
-            print("[AppSession] 🛑 定位已暂停 (mode=\(guardSettings.mode.rawValue), isPaused=\(guardSettings.isPaused))")
+            Log.info("AppSession", "🛑 定位已暂停 (mode=\(guardSettings.mode.rawValue), isPaused=\(guardSettings.isPaused))")
         } else {
             Task { await locationManager.switchProfile(to: profile) }
-            print("[AppSession] ▶️ 定位已启动 (profile=\(profile.rawValue))")
+            Log.info("AppSession", "▶️ 定位已启动 (profile=\(profile.rawValue))")
         }
     }
 
@@ -171,7 +170,7 @@ final class AppSession: ObservableObject {
 
     /// 用户从设置页切换档位 / 暂停 / 恢复时调用。
     func handleGuardChange() {
-        print("[AppSession] 守护设置变更: mode=\(guardSettings.mode.rawValue), isPaused=\(guardSettings.isPaused)")
+        Log.info("AppSession", "守护设置变更: mode=\(guardSettings.mode.rawValue), isPaused=\(guardSettings.isPaused)")
         applyGuardMode()
     }
 
@@ -183,7 +182,7 @@ final class AppSession: ObservableObject {
                 try? await Task.sleep(nanoseconds: 60_000_000_000)  // 60s
                 let expired = await MainActor.run { self.guardSettings.checkPauseExpiry() }
                 if expired {
-                    print("[AppSession] 暂停到期，自动恢复共享")
+                    Log.info("AppSession", "暂停到期，自动恢复共享")
                     await MainActor.run { self.applyGuardMode() }
                 }
             }
@@ -218,7 +217,7 @@ final class AppSession: ObservableObject {
                 try? await Task.sleep(nanoseconds: 15_000_000_000)  // 15s
             }
         }
-        print("[AppSession] partner HTTP 轮询启动 (15s/次)")
+        Log.info("AppSession", "partner HTTP 轮询启动 (15s/次)")
     }
 
     @MainActor
@@ -244,7 +243,7 @@ final class AppSession: ObservableObject {
         do {
             _ = try await http.fetchPartnerLocation(userId: partnerId)
         } catch {
-            print("[AppSession] HTTP 拉取对方位置失败: \(error)")
+            Log.warn("AppSession", "HTTP 拉取对方位置失败: \(error)")
         }
     }
 
@@ -359,7 +358,7 @@ enum DevMock {
         store.lastKnownPartnerLocation = mockLocation
         session.lastLocation = myLocation
 
-        print("[DevMock] ✅ mock 伴侣 + 位置已注入,直接进主页调试")
+        Log.info("DevMock", "✅ mock 伴侣 + 位置已注入,直接进主页调试")
     }
 }
 

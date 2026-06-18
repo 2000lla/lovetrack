@@ -108,7 +108,7 @@ public final class TrackPlaybackViewModel: ObservableObject {
     @Published public var selectedDate: Date = Calendar.current.startOfDay(for: Date())
     @Published public private(set) var currentTime: Date = Date()
     @Published public private(set) var polyline: [CLLocationCoordinate2D] = []
-    @Published public private(set) var annotations: [MapView.Annotation] = []
+    @Published public private(set) var annotations: [MapView.MapItem] = []
     @Published public private(set) var totalDistanceKm: Double = 0
     @Published public private(set) var playheadFraction: Double = 0
     @Published public private(set) var currentCoordinate: CLLocationCoordinate2D? = nil
@@ -138,7 +138,7 @@ public final class TrackPlaybackViewModel: ObservableObject {
             CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon)
         } ?? []
         annotations = (seg?.points.first.map { p in
-            MapView.Annotation(
+            MapView.MapItem(
                 id: "start",
                 coordinate: .init(latitude: p.lat, longitude: p.lon),
                 title: "起点",

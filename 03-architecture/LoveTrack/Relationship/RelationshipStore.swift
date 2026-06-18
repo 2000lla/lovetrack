@@ -112,6 +112,6 @@ public final class RelationshipStore: ObservableObject {
     @MainActor
     public func refreshPartnerLocation(_ point: LocationPoint) {
         self.lastKnownPartnerLocation = point
-        print("[RelationshipStore] partner location updated: \(point.lat), \(point.lon)")
+        Log.info("RelationshipStore", "partner location updated: \(point.lat), \(point.lon)")
     }
 }

@@ -127,7 +127,7 @@ private struct QuickCard: View {
 
 #Preview {
     QuickCards { kind in
-        print("tap: \(kind.title)")
+        Log.info("QuickCards", "tap: \(kind.title)")
     }
     .padding()
     .background(Theme.bgGradient)

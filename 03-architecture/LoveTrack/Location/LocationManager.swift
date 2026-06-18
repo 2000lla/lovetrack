@@ -211,13 +211,13 @@ public actor LocationManager {
     /// 切换守护档位（不重启 App，运行时切换）。
     public func switchProfile(to newProfile: GuardProfile) {
         guard newProfile != self.profile else { return }
-        print("[LocationManager] switchProfile: \(self.profile.rawValue) → \(newProfile.rawValue)")
+        Log.info("LocationManager", "switchProfile: \(self.profile.rawValue) → \(newProfile.rawValue)")
         try? start(profile: newProfile)
     }
 
     /// 暂停 / 恢复采集（不解绑 WS）。
     public func pause() {
-        print("[LocationManager] pause")
+        Log.info("LocationManager", "pause")
         cl.stopUpdatingLocation()
         cl.stopMonitoringSignificantLocationChanges()
         heartbeatTask?.cancel()
@@ -226,7 +226,7 @@ public actor LocationManager {
     }
 
     public func resume() {
-        print("[LocationManager] resume")
+        Log.info("LocationManager", "resume")
         try? start()
     }
 
@@ -254,7 +254,7 @@ public actor LocationManager {
                 await self.fireHeartbeat()
             }
         }
-        print("[LocationManager] heartbeat loop started: every \(Int(interval))s (profile=\(profile.rawValue))")
+        Log.info("LocationManager", "heartbeat loop started: every \(Int(interval))s (profile=\(profile.rawValue))")
     }
 
     private func fireHeartbeat() {
@@ -266,7 +266,7 @@ public actor LocationManager {
             battery: currentBatteryInfoSync(),
             sessionId: sessionId
         )
-        print("[LocationManager] 💓 heartbeat fired (last=\(last.coordinate.latitude), \(last.coordinate.longitude))")
+        Log.info("LocationManager", "💓 heartbeat fired (last=\(last.coordinate.latitude), \(last.coordinate.longitude))")
         for cont in continuations.values {
             cont.yield(event)
         }
@@ -401,7 +401,7 @@ public actor LocationManager {
             cl.allowsBackgroundLocationUpdates = true
             cl.startMonitoringSignificantLocationChanges()
         }
-        print("[LocationManager] applyMode(\(newMode.rawValue)) profile=\(profile.rawValue) accuracy=\(cl.desiredAccuracy) filter=\(cl.distanceFilter)")
+        Log.info("LocationManager", "applyMode(\(newMode.rawValue)) profile=\(profile.rawValue) accuracy=\(cl.desiredAccuracy) filter=\(cl.distanceFilter)")
     }
 
     private func waitForAuthChange(timeout: TimeInterval = 30) async -> AuthState {

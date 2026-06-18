@@ -68,8 +68,8 @@ public struct PairScreen: View {
             .padding(.top, 16)
 
             // ⬇️ mini 地图: 未配对时也能验证 app 真在定位
-            if AAMapBootstrap.isAvailable, let me = session.lastLocation {
-                AAMapView(
+            if let me = session.lastLocation {
+                MapKitView(
                     center: me.coordinate,
                     partner: nil,
                     me: MapPerson(
@@ -267,10 +267,10 @@ public struct PairScreen: View {
             let code = try await session.relationshipStore.generatePairCode()
             inviteCode = code
             mode = .create
-            print("[PairScreen] ✅ 创建邀请码成功: \(code)")
+            Log.info("PairScreen", "✅ 创建邀请码成功: \(code)")
         } catch {
             errorMessage = "创建失败: \(error.localizedDescription)"
-            print("[PairScreen] ❌ 创建邀请码失败: \(error)")
+            Log.error("PairScreen", "❌ 创建邀请码失败: \(error)")
         }
     }
 
@@ -284,10 +284,10 @@ public struct PairScreen: View {
         do {
             try await session.relationshipStore.acceptPairCode(inputCode)
             session.completePairing()
-            print("[PairScreen] ✅ 绑定成功: code=\(inputCode)")
+            Log.info("PairScreen", "✅ 绑定成功: code=\(inputCode)")
         } catch {
             errorMessage = "绑定失败: \(error.localizedDescription)"
-            print("[PairScreen] ❌ 绑定失败: \(error)")
+            Log.error("PairScreen", "❌ 绑定失败: \(error)")
         }
     }
 }

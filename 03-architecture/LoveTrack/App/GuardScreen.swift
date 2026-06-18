@@ -329,6 +329,35 @@ public struct GuardScreen: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                Divider().padding(.leading, 50)
+                NavigationLink {
+                    DevLogScreen()
+                } label: {
+                    HStack(spacing: 12) {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: Theme.radiusMd, style: .continuous)
+                                .fill(Color(red: 0.91, green: 0.95, blue: 1.00))
+                                .frame(width: 32, height: 32)
+                            Image(systemName: "terminal.fill")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundColor(Theme.violet)
+                        }
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("开发者日志")
+                                .font(.system(size: Theme.fontSm, weight: .medium))
+                            Text("查看 / 导出运行日志（debug 用）")
+                                .font(.system(size: 11))
+                                .foregroundColor(Theme.textMuted)
+                        }
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(Theme.textSubtle)
+                    }
+                    .padding(.vertical, 12)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
             }
         }
         .padding(16)

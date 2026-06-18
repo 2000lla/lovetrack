@@ -110,11 +110,11 @@ public final class HTTPRealtimeSyncService: RealtimeSyncServiceProtocol, @unchec
         let body = ["userId": inviter.id]
         req.httpBody = try JSONSerialization.data(withJSONObject: body)
 
-        print("[HTTPRealtime] POST \(req.url?.absoluteString ?? "?") body=\(body)")
+        Log.info("HTTPRealtime", "POST \(req.url?.absoluteString ?? "?") body=\(body)")
 
         do {
             let (data, resp) = try await session.data(for: req)
-            print("[HTTPRealtime] got response, status=\((resp as? HTTPURLResponse)?.statusCode ?? 0)")
+            Log.info("HTTPRealtime", "got response, status=\((resp as? HTTPURLResponse)?.statusCode ?? 0)")
             guard let http = resp as? HTTPURLResponse else {
                 throw ServiceError.httpStatus(0, "no http response")
             }
@@ -129,7 +129,7 @@ public final class HTTPRealtimeSyncService: RealtimeSyncServiceProtocol, @unchec
                 throw ServiceError.decoding(NSError(domain: "decode", code: 0))
             }
             latestInviteCode = serverCode
-            print("[HTTPRealtime] bind OK: code=\(serverCode) userId=\(inviter.id)")
+            Log.info("HTTPRealtime", "bind OK: code=\(serverCode) userId=\(inviter.id)")
 
             // 后端返回的是 serverCode，不是入参 code —— 入参 code 是占位
             // 我们信任后端返回的 code
@@ -146,7 +146,7 @@ public final class HTTPRealtimeSyncService: RealtimeSyncServiceProtocol, @unchec
             // 启动 WebSocket
             await connectWebSocket()
         } catch let urlError as URLError {
-            print("[HTTPRealtime] URLError: \(urlError.code.rawValue) - \(urlError.localizedDescription)")
+            Log.warn("HTTPRealtime", "URLError: \(urlError.code.rawValue) - \(urlError.localizedDescription)")
             throw urlError
         }
     }
@@ -189,7 +189,7 @@ public final class HTTPRealtimeSyncService: RealtimeSyncServiceProtocol, @unchec
         actualPartnerKey = inviterId
         lock.unlock()
 
-        print("[HTTPRealtime] pair OK: \(inviterId) ↔ \(invitee.id), partnerKey=\(inviterId)")
+        Log.info("HTTPRealtime", "pair OK: \(inviterId) ↔ \(invitee.id), partnerKey=\(inviterId)")
         await connectWebSocket()
         return rel
     }
@@ -237,7 +237,7 @@ public final class HTTPRealtimeSyncService: RealtimeSyncServiceProtocol, @unchec
             self.locationStreams[effectiveKey] = dict
             let initial = self.latestPartnerLocation[effectiveKey]
             self.lock.unlock()
-            print("[HTTPRealtime] observePartnerLocation(userId=\(userId)) → effective=\(effectiveKey), hasInitial=\(initial != nil)")
+            Log.info("HTTPRealtime", "observePartnerLocation(userId=\(userId)) → effective=\(effectiveKey), hasInitial=\(initial != nil)")
             if let p = initial { cont.yield(p) }
             cont.onTermination = { [weak self] _ in
                 self?.lock.lock()
@@ -260,26 +260,26 @@ public final class HTTPRealtimeSyncService: RealtimeSyncServiceProtocol, @unchec
         req.httpMethod = "GET"
         req.timeoutInterval = 5
 
-        print("[HTTPRealtime] GET \(url.absoluteString)")
+        Log.info("HTTPRealtime", "GET \(url.absoluteString)")
         let (data, resp) = try await session.data(for: req)
         guard let http = resp as? HTTPURLResponse else {
-            print("[HTTPRealtime] fetchPartnerLocation: no http response")
+            Log.warn("HTTPRealtime", "fetchPartnerLocation: no http response")
             return nil
         }
         // 404 是合法状态（对方还没上报过位置）
         if http.statusCode == 404 {
-            print("[HTTPRealtime] fetchPartnerLocation: 404 (no location yet)")
+            Log.info("HTTPRealtime", "fetchPartnerLocation: 404 (no location yet)")
             return nil
         }
         guard (200..<300).contains(http.statusCode) else {
             let body = String(data: data, encoding: .utf8) ?? ""
-            print("[HTTPRealtime] fetchPartnerLocation: HTTP \(http.statusCode) \(body)")
+            Log.warn("HTTPRealtime", "fetchPartnerLocation: HTTP \(http.statusCode) \(body)")
             throw ServiceError.httpStatus(http.statusCode, body)
         }
         guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
               let lat = json["lat"] as? Double,
               let lng = json["lng"] as? Double else {
-            print("[HTTPRealtime] fetchPartnerLocation: bad payload")
+            Log.warn("HTTPRealtime", "fetchPartnerLocation: bad payload")
             return nil
         }
         let battery = json["battery"] as? Double ?? 1.0
@@ -301,7 +301,7 @@ public final class HTTPRealtimeSyncService: RealtimeSyncServiceProtocol, @unchec
             source: .gps,
             sessionId: ""
         )
-        print("[HTTPRealtime] fetchPartnerLocation: ✅ lat=\(lat), lng=\(lng), battery=\(Int(battery*100))%, age=\(Int(Date().timeIntervalSince(timestamp)))s")
+        Log.info("HTTPRealtime", "fetchPartnerLocation: ✅ lat=\(lat), lng=\(lng), battery=\(Int(battery*100))%, age=\(Int(Date().timeIntervalSince(timestamp)))s")
 
         // 同时更新内部缓存 + 推送给订阅者
         self.lock.lock()
@@ -313,7 +313,7 @@ public final class HTTPRealtimeSyncService: RealtimeSyncServiceProtocol, @unchec
         let fallbackStreams = self.locationStreams["partner"] ?? [:]
         self.lock.unlock()
         let totalSubs = streams.count + fallbackStreams.count
-        print("[HTTPRealtime] fetchPartnerLocation: yield to \(totalSubs) subscribers (key=\(key) + fallback)")
+        Log.debug("HTTPRealtime", "fetchPartnerLocation: yield to \(totalSubs) subscribers (key=\(key) + fallback)")
         for cont in streams.values { cont.yield(point) }
         for cont in fallbackStreams.values { cont.yield(point) }
 
@@ -337,14 +337,14 @@ public final class HTTPRealtimeSyncService: RealtimeSyncServiceProtocol, @unchec
             }
         }
         lock.unlock()
-        print("[HTTPRealtime] partnerKey set: \(userId ?? "nil") (was: \(oldKey ?? "nil"))")
+        Log.info("HTTPRealtime", "partnerKey set: \(userId ?? "nil") (was: \(oldKey ?? "nil"))")
     }
 
     // MARK: - WebSocket
 
     /// 在 App 启动时提前连 WS（不依赖配对）
     public func bootstrapConnect() async {
-        print("[HTTPRealtime] bootstrapConnect called")
+        Log.info("HTTPRealtime", "bootstrapConnect called")
         await connectWebSocket()
     }
 
@@ -358,7 +358,7 @@ public final class HTTPRealtimeSyncService: RealtimeSyncServiceProtocol, @unchec
         self.task = newTask
         newTask.resume()
         isConnected = true
-        print("[HTTPRealtime] WebSocket connecting to \(url.absoluteString)")
+        Log.info("HTTPRealtime", "WebSocket connecting to \(url.absoluteString)")
         // 后台跑接收循环（不要 await，否则会阻塞外层）
         Task { await self.receiveLoop() }
     }
@@ -386,7 +386,7 @@ public final class HTTPRealtimeSyncService: RealtimeSyncServiceProtocol, @unchec
                 }
             }
         } catch {
-            print("[HTTPRealtime] WebSocket error: \(error.localizedDescription)")
+            Log.warn("HTTPRealtime", "WebSocket error: \(error.localizedDescription)")
             isConnected = false
         }
     }
@@ -395,7 +395,7 @@ public final class HTTPRealtimeSyncService: RealtimeSyncServiceProtocol, @unchec
         guard let data = raw.data(using: .utf8),
               let msg = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let type = msg["type"] as? String else {
-            print("[HTTPRealtime] ⚠️ 无法解析服务端消息: \(raw.prefix(120))")
+            Log.warn("HTTPRealtime", "⚠️ 无法解析服务端消息: \(raw.prefix(120))")
             return
         }
 
@@ -404,7 +404,7 @@ public final class HTTPRealtimeSyncService: RealtimeSyncServiceProtocol, @unchec
             guard let payload = msg["payload"] as? [String: Any],
                   let lat = payload["lat"] as? Double,
                   let lng = payload["lng"] as? Double else {
-                print("[HTTPRealtime] partner_location payload 缺 lat/lng")
+                Log.warn("HTTPRealtime", "partner_location payload 缺 lat/lng")
                 return
             }
             let batteryLevel = payload["battery"] as? Double ?? 1.0
@@ -441,15 +441,15 @@ public final class HTTPRealtimeSyncService: RealtimeSyncServiceProtocol, @unchec
             let subscriberCount = streams.count + fallbackStreams.count
             lock.unlock()
 
-            print("[HTTPRealtime] 📍 partner_location 收到: lat=\(lat), lng=\(lng), battery=\(Int(batteryLevel*100))%, age=\(Int(Date().timeIntervalSince(timestamp)))s → key=\(partnerKey), subscribers=\(subscriberCount)")
+            Log.info("HTTPRealtime", "📍 partner_location 收到: lat=\(lat), lng=\(lng), battery=\(Int(batteryLevel*100))%, age=\(Int(Date().timeIntervalSince(timestamp)))s → key=\(partnerKey), subscribers=\(subscriberCount)")
             for cont in streams.values { cont.yield(point) }
             for cont in fallbackStreams.values { cont.yield(point) }
 
         case "pong":
-            print("[HTTPRealtime] pong received")
+            Log.debug("HTTPRealtime", "pong received")
 
         case "pair_success":
-            print("[HTTPRealtime] 🎉 pair_success 收到！")
+            Log.info("HTTPRealtime", "🎉 pair_success 收到！")
             let payload = msg["payload"] as? [String: Any] ?? [:]
             let inviteeId = payload["inviteeId"] as? String ?? "partner"
             // 更新本地状态 + 锁定 partnerKey 给后续订阅
@@ -470,12 +470,12 @@ public final class HTTPRealtimeSyncService: RealtimeSyncServiceProtocol, @unchec
                 let partnerKey = (rel.userA == self.userId) ? inviteeId : rel.userA
                 self.actualPartnerKey = partnerKey
                 self.lock.unlock()
-                print("[HTTPRealtime] pair_success 设置 partnerKey=\(partnerKey)")
+                Log.info("HTTPRealtime", "pair_success 设置 partnerKey=\(partnerKey)")
             }
             onPairSuccess?(inviteeId)
 
         default:
-            print("[HTTPRealtime] 未处理的消息类型: \(type)")
+            Log.warn("HTTPRealtime", "未处理的消息类型: \(type)")
         }
     }
 }

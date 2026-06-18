@@ -112,7 +112,7 @@ private struct BottomNavPreview: View {
         VStack {
             Spacer()
             LoveTrackBottomNav(selection: $selection) { tab in
-                print("switch: \(tab.label)")
+                Log.info("BottomNav", "switch: \(tab.label)")
             }
         }
         .background(Theme.bgGradient)

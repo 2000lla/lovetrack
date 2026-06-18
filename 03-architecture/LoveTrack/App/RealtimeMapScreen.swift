@@ -105,12 +105,12 @@ public struct RealtimeMapScreen: View {
         .scrollIndicators(.hidden)
     }
 
-    // MARK: - 地图区: 有 SDK 走真地图, 否则 Canvas 占位
+    // MARK: - 地图区: MapKit 真实地图
 
     @ViewBuilder
     private var mapSection: some View {
-        if AAMapBootstrap.isAvailable, let center = mapCenter {
-            AAMapView(
+        if let center = mapCenter {
+            MapKitView(
                 center: center,
                 partner: mapPartner,
                 me: mapMe
