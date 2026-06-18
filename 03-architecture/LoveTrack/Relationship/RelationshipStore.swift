@@ -101,6 +101,19 @@ public final class RelationshipStore: ObservableObject {
         }
     }
 
+    /// 公开版本:外部(如 AppSession.onPairSuccess)直接套一个 active Relationship 上来。
+    /// 用例:inviter 走 /bind 流程,store.relationship 卡在 pending (userB=""),
+    /// 收到 pair_success 后要把它升级成 active 才能让 polling 路径正常工作。
+    public func startObservingPartnerWithRelationship(_ r: Relationship) async {
+        await MainActor.run {
+            self.relationship = r
+            self.isPaired = r.status == .active
+        }
+        if r.status == .active {
+            await startObservingPartner()
+        }
+    }
+
     /// 计算"我"到伴侣的距离（公里）。
     public func distanceKmToPartner(myLocation: CLLocation?) -> Double? {
         guard let p = lastKnownPartnerLocation, let me = myLocation else { return nil }

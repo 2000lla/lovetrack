@@ -528,14 +528,18 @@ public final class HTTPRealtimeSyncService: RealtimeSyncServiceProtocol, @unchec
             latestPartnerLocation[partnerKey] = point
             // 兜底：也存到 "partner" key，兼容老的 AppSession 订阅
             latestPartnerLocation["partner"] = point
-            let streams = locationStreams[partnerKey] ?? [:]
-            let fallbackStreams = locationStreams["partner"] ?? [:]
-            let subscriberCount = streams.count + fallbackStreams.count
+            // 🐛 BUG FIX: 当 partnerKey == "partner" 时,streams 和 fallbackStreams 是同一个 dict,
+            // 双重迭代会把每个订阅者 yield 两次 → refreshPartnerLocation 被调 2 次 → 日志里 "subscribers=2" 是误报。
+            // 改为用 Set 去重 + 一次 yield。
+            let primaryStreams = locationStreams[partnerKey] ?? [:]
+            let fallbackStreams = partnerKey == "partner" ? [:] : (locationStreams["partner"] ?? [:])
+            let allContinuations: [UUID: AsyncStream<LocationPoint>.Continuation] =
+                primaryStreams.merging(fallbackStreams) { _, new in new }
+            let subscriberCount = allContinuations.count
             lock.unlock()
 
             Log.info("HTTPRealtime", "📍 partner_location 派发: point.userId=\(point.userId) point.lat=\(point.lat) point.lon=\(point.lon) → subscribers=\(subscriberCount) (key=\(partnerKey)+partner)")
-            for cont in streams.values { cont.yield(point) }
-            for cont in fallbackStreams.values { cont.yield(point) }
+            for cont in allContinuations.values { cont.yield(point) }
 
         case "pong":
             Log.debug("HTTPRealtime", "pong received")

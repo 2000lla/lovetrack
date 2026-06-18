@@ -78,7 +78,24 @@ final class AppSession: ObservableObject {
                     self.isPaired = true
                     self.relationshipStore.partner = User(id: inviteeId, displayName: "伴侣")
                     self.relationshipStore.isPaired = true
-                    Log.info("AppSession", "pair_success → auto-transitioning to main, inviteeId=\(inviteeId)")
+                    // 🐛 BUG FIX: inviter 流程下,store.relationship 卡在 pending (userB="")
+                    // 导致 pollPartnerLocationOnce guard 在 partnerId.isEmpty 处永远返回,
+                    // lastKnownPartnerLocation 一直是 WS 重连时的陈旧数据,UI 显示"对方不正确"。
+                    // 这里构造一个 active Relationship 并 applyRelationship,触发订阅 + 修正 polling 路径。
+                    let inviterId = self.currentUser.id
+                    let pendingRel = self.relationshipStore.relationship
+                    let activeRel = Relationship(
+                        id: pendingRel?.id ?? "rel_\(inviterId)_\(inviteeId)",
+                        userA: inviterId,
+                        userB: inviteeId,
+                        status: .active,
+                        pairedAt: pendingRel?.pairedAt ?? Date()
+                    )
+                    Task { @MainActor in
+                        await self.relationshipStore.startObservingPartnerWithRelationship(activeRel)
+                    }
+                    self.relationshipStore.relationship = activeRel
+                    Log.info("AppSession", "pair_success → auto-transitioning to main, inviteeId=\(inviteeId), relationship upgraded to active")
                     // 配对成功后立即拉一次对方位置（不等 15s 轮询）
                     Task { await self.pollPartnerLocationOnce() }
                 }
