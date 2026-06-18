@@ -111,6 +111,8 @@ public final class RelationshipStore: ObservableObject {
     /// 主动刷新对方位置（外部 WebSocket 流触发）
     @MainActor
     public func refreshPartnerLocation(_ point: LocationPoint) {
+        // 🐛 Bug 排查:打印点是谁 + 坐标。如果 point.userId 是 self,那是个 bug。
+        Log.info("RelationshipStore", "🔄 refreshPartnerLocation: point.userId=\(point.userId) lat=\(point.lat) lon=\(point.lon)")
         self.lastKnownPartnerLocation = point
         Log.info("RelationshipStore", "partner location updated: \(point.lat), \(point.lon)")
     }

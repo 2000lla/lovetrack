@@ -492,8 +492,10 @@ function handleWsMessage(userId, ws, msg) {
       const loc = { lat, lng, battery, timestamp: Date.now() };
       locations.set(userId, loc);
 
-      // 推送给对方
+      // 🐛 Bug 排查:打印谁上传 + 给谁推 + 推的坐标
       const partner = findPartner(userId);
+      console.log(`[ws:loc] ${userId} 上传 lat=${lat} lng=${lng} → partner=${partner ?? "none"} 推 partner_location lat=${lat} lng=${lng}`);
+      // 推送给对方
       if (partner && sockets.has(partner)) {
         sockets.get(partner).send(JSON.stringify({
           type: 'partner_location',

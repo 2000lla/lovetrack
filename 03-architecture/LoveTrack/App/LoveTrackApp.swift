@@ -132,7 +132,8 @@ final class AppSession: ObservableObject {
                 )
                 try? await self.realtime.uploadPoint(point)
                 self.lastLocation = event.location
-                Log.info("AppSession", "📍 上传位置: \(point.lat), \(point.lon) (mode=\(event.mode.rawValue), hp=\(Int(point.horizontalAccuracy))m)")
+                // 🐛 Bug 排查:userId=自己,坐标=GPS,标记为"我"上传。
+                Log.info("AppSession", "📤 我上传: userId=\(point.userId) lat=\(point.lat) lon=\(point.lon) mode=\(event.mode.rawValue) hp=\(Int(point.horizontalAccuracy))m")
             }
         }
         // 5. 按用户选的档位启动定位

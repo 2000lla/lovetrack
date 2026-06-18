@@ -386,6 +386,9 @@ public final class HTTPRealtimeSyncService: RealtimeSyncServiceProtocol, @unchec
         }
 
         Log.info("HTTPRealtime", "fetchMyState: ✅ paired with \(partnerId), hasPartnerLoc=\(partnerLoc != nil)")
+        if let loc = partnerLoc {
+            Log.info("HTTPRealtime", "📍 fetchMyState partnerLoc: userId=\(loc.userId) lat=\(loc.lat) lon=\(loc.lon)")
+        }
         return MyState(relationship: rel, partnerId: partnerId, lastKnownPartnerLocation: partnerLoc)
     }
 
@@ -412,6 +415,10 @@ public final class HTTPRealtimeSyncService: RealtimeSyncServiceProtocol, @unchec
             }
         }
         lock.unlock()
+        // 🐛 Bug 排查:不要把自己设成 partnerKey。
+        if userId == self.userId {
+            Log.error("HTTPRealtime", "🐛 BUG: setPartnerKey(\(userId ?? "nil")) 但 self.userId 也是 \(self.userId)!")
+        }
         Log.info("HTTPRealtime", "partnerKey set: \(userId ?? "nil") (was: \(oldKey ?? "nil"))")
     }
 
@@ -491,6 +498,16 @@ public final class HTTPRealtimeSyncService: RealtimeSyncServiceProtocol, @unchec
             let partnerKey = self.actualPartnerKey ?? "partner"
             self.lock.unlock()
 
+            // 🐛 Bug 排查:打印接收方 / partnerKey / 实际收到的坐标。
+            // 之前 bug = "A看A正确但A看B不正确",这条日志会显示 iOS 是否真的拿到了对方的坐标。
+            Log.info("HTTPRealtime", "📍 partner_location 收: 接收方=\(self.userId) partnerKey=\(partnerKey) lat=\(lat) lng=\(lng) bat=\(Int(batteryLevel*100))% age=\(Int(Date().timeIntervalSince(timestamp)))s")
+
+            // 🐛 防御:partnerLocation 不应该是自己。如果 partnerKey 跟自己一致,
+            // 说明 actualPartnerKey 没正确初始化(典型症状:A 的 marker 显示在 A 自己的位置上)。
+            if partnerKey == self.userId {
+                Log.error("HTTPRealtime", "🐛 BUG: partnerKey(\(partnerKey)) == self.userId(\(self.userId))! 收到的 partner_location 会被当成自己的位置。actualPartnerKey 路由错乱。")
+            }
+
             let point = LocationPoint(
                 userId: partnerKey,
                 lat: lat,
@@ -516,7 +533,7 @@ public final class HTTPRealtimeSyncService: RealtimeSyncServiceProtocol, @unchec
             let subscriberCount = streams.count + fallbackStreams.count
             lock.unlock()
 
-            Log.info("HTTPRealtime", "📍 partner_location 收到: lat=\(lat), lng=\(lng), battery=\(Int(batteryLevel*100))%, age=\(Int(Date().timeIntervalSince(timestamp)))s → key=\(partnerKey), subscribers=\(subscriberCount)")
+            Log.info("HTTPRealtime", "📍 partner_location 派发: point.userId=\(point.userId) point.lat=\(point.lat) point.lon=\(point.lon) → subscribers=\(subscriberCount) (key=\(partnerKey)+partner)")
             for cont in streams.values { cont.yield(point) }
             for cont in fallbackStreams.values { cont.yield(point) }
 
