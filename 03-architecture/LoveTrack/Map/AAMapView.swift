@@ -50,7 +50,9 @@ public struct AAMapView: UIViewRepresentable {
         map.delegate = context.coordinator
         map.showsUserLocation = showsUserLocation
         map.zoomLevel = zoomLevel
-        map.setCenter(center, animated: false)
+        // 关键修复：WGS-84 → GCJ-02，iOS CoreLocation 给的是 WGS-84，
+        // 高德地图内部用 GCJ-02，不转换会偏 ~500m
+        map.setCenter(center.gcj02, animated: false)
         // 关闭高德 logo 缩放控件
         map.showsCompass = true
         map.showsScale = true
@@ -62,26 +64,26 @@ public struct AAMapView: UIViewRepresentable {
         let stale = map.annotations.filter { !($0 is MAUserLocation) }
         map.removeAnnotations(stale)
 
-        // 2. 加伴侣 marker
+        // 2. 加伴侣 marker（WGS-84 → GCJ-02）
         if let p = partner {
             let pin = MAPointAnnotation()
-            pin.coordinate = p.coordinate
+            pin.coordinate = p.coordinate.gcj02
             pin.title = p.name
             pin.subtitle = "TA 在这里"
             map.addAnnotation(pin)
         }
 
-        // 3. 加我 marker (如果不用 showsUserLocation 蓝点)
+        // 3. 加我 marker（如果不用 showsUserLocation 蓝点；WGS-84 → GCJ-02）
         if !showsUserLocation, let m = me {
             let pin = MAPointAnnotation()
-            pin.coordinate = m.coordinate
+            pin.coordinate = m.coordinate.gcj02
             pin.title = m.name
             pin.subtitle = "我在这里"
             map.addAnnotation(pin)
         }
 
         // 4. 中心点移动 (动画)
-        map.setCenter(center, animated: true)
+        map.setCenter(center.gcj02, animated: true)
     }
 
     public func makeCoordinator() -> Coordinator {

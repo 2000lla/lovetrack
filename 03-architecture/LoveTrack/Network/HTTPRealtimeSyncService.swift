@@ -185,9 +185,11 @@ public final class HTTPRealtimeSyncService: RealtimeSyncServiceProtocol, @unchec
         lock.lock()
         relationship = rel
         users[inviterId] = User(id: inviterId, displayName: "伴侣")
+        // 邀请方是 inviterId，我们（invitee）的 partnerKey 就是 inviterId
+        actualPartnerKey = inviterId
         lock.unlock()
 
-        print("[HTTPRealtime] pair OK: \(inviterId) ↔ \(invitee.id)")
+        print("[HTTPRealtime] pair OK: \(inviterId) ↔ \(invitee.id), partnerKey=\(inviterId)")
         await connectWebSocket()
         return rel
     }
@@ -225,16 +227,21 @@ public final class HTTPRealtimeSyncService: RealtimeSyncServiceProtocol, @unchec
     public func observePartnerLocation(userId: String) -> AsyncStream<LocationPoint> {
         AsyncStream { cont in
             let id = UUID()
+            // 关键修复：用 actualPartnerKey 作为订阅 key，而不是入参 userId。
+            // 入参可能是 "partner"（AppSession 的旧调用）或真 partner UUID（RelationshipStore）。
+            // 真实 partner_location 缓存时也是用 actualPartnerKey，这样三种调用方式都对得上。
             self.lock.lock()
-            var dict = self.locationStreams[userId] ?? [:]
+            let effectiveKey = self.actualPartnerKey ?? userId
+            var dict = self.locationStreams[effectiveKey] ?? [:]
             dict[id] = cont
-            self.locationStreams[userId] = dict
-            let initial = self.latestPartnerLocation[userId]
+            self.locationStreams[effectiveKey] = dict
+            let initial = self.latestPartnerLocation[effectiveKey]
             self.lock.unlock()
+            print("[HTTPRealtime] observePartnerLocation(userId=\(userId)) → effective=\(effectiveKey), hasInitial=\(initial != nil)")
             if let p = initial { cont.yield(p) }
             cont.onTermination = { [weak self] _ in
                 self?.lock.lock()
-                self?.locationStreams[userId]?.removeValue(forKey: id)
+                self?.locationStreams[effectiveKey]?.removeValue(forKey: id)
                 self?.lock.unlock()
             }
         }
@@ -243,6 +250,94 @@ public final class HTTPRealtimeSyncService: RealtimeSyncServiceProtocol, @unchec
     public func fetchTrackSegment(userId: String, date: Date) async throws -> TrackSegment? {
         // MVP 不实现后端轨迹拉取
         return nil
+    }
+
+    /// HTTP 兜底拉取对方最后位置（WebSocket 断线 / 后台被杀 / 服务重启时用）。
+    /// GET /location/:userId → { lat, lng, battery, timestamp }
+    public func fetchPartnerLocation(userId: String) async throws -> LocationPoint? {
+        let url = BackendConfig.baseURL.appendingPathComponent("location/\(userId)")
+        var req = URLRequest(url: url)
+        req.httpMethod = "GET"
+        req.timeoutInterval = 5
+
+        print("[HTTPRealtime] GET \(url.absoluteString)")
+        let (data, resp) = try await session.data(for: req)
+        guard let http = resp as? HTTPURLResponse else {
+            print("[HTTPRealtime] fetchPartnerLocation: no http response")
+            return nil
+        }
+        // 404 是合法状态（对方还没上报过位置）
+        if http.statusCode == 404 {
+            print("[HTTPRealtime] fetchPartnerLocation: 404 (no location yet)")
+            return nil
+        }
+        guard (200..<300).contains(http.statusCode) else {
+            let body = String(data: data, encoding: .utf8) ?? ""
+            print("[HTTPRealtime] fetchPartnerLocation: HTTP \(http.statusCode) \(body)")
+            throw ServiceError.httpStatus(http.statusCode, body)
+        }
+        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let lat = json["lat"] as? Double,
+              let lng = json["lng"] as? Double else {
+            print("[HTTPRealtime] fetchPartnerLocation: bad payload")
+            return nil
+        }
+        let battery = json["battery"] as? Double ?? 1.0
+        let tsMs = json["timestamp"] as? TimeInterval ?? Date().timeIntervalSince1970 * 1000
+        let timestamp = Date(timeIntervalSince1970: tsMs / 1000)
+
+        let point = LocationPoint(
+            userId: userId,
+            lat: lat,
+            lon: lng,
+            altitude: 0,
+            horizontalAccuracy: 0,
+            verticalAccuracy: 0,
+            speed: -1,
+            course: -1,
+            timestamp: timestamp,
+            receivedAt: Date(),
+            battery: BatteryInfo(level: battery, isCharging: false, isLowPower: false),
+            source: .gps,
+            sessionId: ""
+        )
+        print("[HTTPRealtime] fetchPartnerLocation: ✅ lat=\(lat), lng=\(lng), battery=\(Int(battery*100))%, age=\(Int(Date().timeIntervalSince(timestamp)))s")
+
+        // 同时更新内部缓存 + 推送给订阅者
+        self.lock.lock()
+        let key = self.actualPartnerKey ?? userId
+        self.latestPartnerLocation[key] = point
+        // 兜底：也存到 "partner" key，旧订阅者用得上
+        self.latestPartnerLocation["partner"] = point
+        let streams = self.locationStreams[key] ?? [:]
+        let fallbackStreams = self.locationStreams["partner"] ?? [:]
+        self.lock.unlock()
+        let totalSubs = streams.count + fallbackStreams.count
+        print("[HTTPRealtime] fetchPartnerLocation: yield to \(totalSubs) subscribers (key=\(key) + fallback)")
+        for cont in streams.values { cont.yield(point) }
+        for cont in fallbackStreams.values { cont.yield(point) }
+
+        return point
+    }
+
+    /// 实际的 partner userId 缓存（acceptPairInvite 或 pair_success 时设置）。
+    /// 修这个之前 observePartnerLocation(userId: "partner") 是个 magic string，
+    /// 实际 RelationshipStore.startObservingPartner 用的是真 partner UUID，对不上。
+    /// 现在统一用 actualPartnerKey 路由。
+    private var actualPartnerKey: String?
+
+    public func setPartnerKey(_ userId: String?) {
+        lock.lock()
+        let oldKey = actualPartnerKey
+        actualPartnerKey = userId
+        // 如果 partner 变了，把旧的 latest 迁移过来（避免切换时丢位置）
+        if oldKey != userId, let userId = userId {
+            if let oldLoc = latestPartnerLocation[oldKey ?? "partner"] {
+                latestPartnerLocation[userId] = oldLoc
+            }
+        }
+        lock.unlock()
+        print("[HTTPRealtime] partnerKey set: \(userId ?? "nil") (was: \(oldKey ?? "nil"))")
     }
 
     // MARK: - WebSocket
@@ -300,6 +395,7 @@ public final class HTTPRealtimeSyncService: RealtimeSyncServiceProtocol, @unchec
         guard let data = raw.data(using: .utf8),
               let msg = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let type = msg["type"] as? String else {
+            print("[HTTPRealtime] ⚠️ 无法解析服务端消息: \(raw.prefix(120))")
             return
         }
 
@@ -307,13 +403,21 @@ public final class HTTPRealtimeSyncService: RealtimeSyncServiceProtocol, @unchec
         case "partner_location":
             guard let payload = msg["payload"] as? [String: Any],
                   let lat = payload["lat"] as? Double,
-                  let lng = payload["lng"] as? Double else { return }
+                  let lng = payload["lng"] as? Double else {
+                print("[HTTPRealtime] partner_location payload 缺 lat/lng")
+                return
+            }
             let batteryLevel = payload["battery"] as? Double ?? 1.0
             let ts = payload["timestamp"] as? TimeInterval ?? Date().timeIntervalSince1970 * 1000
             let timestamp = Date(timeIntervalSince1970: ts / 1000)
 
+            // 用 actualPartnerKey 路由（避免 RelationshipStore 和 AppSession 订阅对不上）
+            self.lock.lock()
+            let partnerKey = self.actualPartnerKey ?? "partner"
+            self.lock.unlock()
+
             let point = LocationPoint(
-                userId: "partner",
+                userId: partnerKey,
                 lat: lat,
                 lon: lng,
                 altitude: 0,
@@ -322,24 +426,33 @@ public final class HTTPRealtimeSyncService: RealtimeSyncServiceProtocol, @unchec
                 speed: -1,
                 course: -1,
                 timestamp: timestamp,
+                receivedAt: Date(),
                 battery: BatteryInfo(level: batteryLevel, isCharging: false, isLowPower: false),
                 source: .gps,
                 sessionId: ""
             )
+
             lock.lock()
+            latestPartnerLocation[partnerKey] = point
+            // 兜底：也存到 "partner" key，兼容老的 AppSession 订阅
             latestPartnerLocation["partner"] = point
-            let streams = locationStreams["partner"] ?? [:]
+            let streams = locationStreams[partnerKey] ?? [:]
+            let fallbackStreams = locationStreams["partner"] ?? [:]
+            let subscriberCount = streams.count + fallbackStreams.count
             lock.unlock()
+
+            print("[HTTPRealtime] 📍 partner_location 收到: lat=\(lat), lng=\(lng), battery=\(Int(batteryLevel*100))%, age=\(Int(Date().timeIntervalSince(timestamp)))s → key=\(partnerKey), subscribers=\(subscriberCount)")
             for cont in streams.values { cont.yield(point) }
+            for cont in fallbackStreams.values { cont.yield(point) }
 
         case "pong":
             print("[HTTPRealtime] pong received")
 
         case "pair_success":
-            print("[HTTPRealtime] pair_success received!")
+            print("[HTTPRealtime] 🎉 pair_success 收到！")
             let payload = msg["payload"] as? [String: Any] ?? [:]
             let inviteeId = payload["inviteeId"] as? String ?? "partner"
-            // 更新本地状态
+            // 更新本地状态 + 锁定 partnerKey 给后续订阅
             self.lock.lock()
             let r = self.relationship
             self.lock.unlock()
@@ -353,12 +466,16 @@ public final class HTTPRealtimeSyncService: RealtimeSyncServiceProtocol, @unchec
                     pairedAt: Date()
                 )
                 self.users[inviteeId] = User(id: inviteeId, displayName: "伴侣")
+                // partnerKey = 对方 userId（不管我是 inviter 还是 invitee）
+                let partnerKey = (rel.userA == self.userId) ? inviteeId : rel.userA
+                self.actualPartnerKey = partnerKey
                 self.lock.unlock()
+                print("[HTTPRealtime] pair_success 设置 partnerKey=\(partnerKey)")
             }
             onPairSuccess?(inviteeId)
 
         default:
-            break
+            print("[HTTPRealtime] 未处理的消息类型: \(type)")
         }
     }
 }

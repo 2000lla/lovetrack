@@ -8,6 +8,8 @@
 	<array>
 		<string>com.lovetrack.app.refresh</string>
 	</array>
+	<key>BackendURL</key>
+	<string>$(LOVETRACK_BACKEND_URL)</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>zh_CN</string>
 	<key>CFBundleExecutable</key>
@@ -34,13 +36,29 @@
 		<true/>
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>YOUR_SERVER_IP</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+				<key>NSIncludesSubdomains</key>
+				<false/>
+			</dict>
+		</dict>
 	</dict>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>开启"始终"权限后，即便 App 在后台或锁屏，我们也能持续为你和伴侣更新位置，守护彼此安全。我们采用 Apple 推荐的 CoreLocation 后台服务模式，仅在位置发生显著变化时上报，不会持续高频采集。</string>
+	<string>开启「始终」权限后，LoveTrack 才能在后台或锁屏时持续为你更新位置，让伴侣随时看到你所在区域（如是否已安全到家、是否仍在路上）。
+
+📍 **采集方式**：默认采用「标准守护」模式（保守档），后台静止时每 5 分钟发送一次心跳，移动时 15-30 秒更新一次，电量影响极小。如需更高频率，可手动开启「实时守护」（后台 1 分钟心跳 + 移动 3-10 秒更新）。
+
+🛑 **你的控制权**：你随时可以在「设置-守护」中切换档位、一键暂停共享 1 小时、或暂停到明早 8 点。后台定位可能显著降低电池续航。
+
+🔒 **隐私承诺**：位置数据仅你和你的伴侣可见，加密传输，绝不用于广告或第三方。</string>
 	<key>NSLocationAlwaysUsageDescription</key>
-	<string>保留此字段以兼容 iOS 10 设备。我们仅在位置发生显著变化时上报位置，不会持续高频采集。</string>
+	<string>保留此字段以兼容 iOS 10 设备。我们仅在你主动开启位置共享时才会采集位置，你随时可在 App 内关闭。</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>我们需要在 App 打开时获取你的位置，用于显示你与伴侣的实时距离。位置数据仅在 App 运行时使用，不会用于广告。</string>
+	<string>LoveTrack 是一款情侣位置共享 App。我们需要获取你的位置，用于：① 显示你与伴侣的实时距离 ② 在你到达或离开常用地点时提醒伴侣。位置数据仅用于你和你的伴侣之间共享，不会上传给任何第三方，也不会用于广告。</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>location</string>

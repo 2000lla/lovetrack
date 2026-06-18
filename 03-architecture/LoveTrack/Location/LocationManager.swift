@@ -25,6 +25,66 @@ public actor LocationManager {
         case significantChange // 兜底
     }
 
+    /// 三档守护模式对应的定位策略。
+    /// 与 GuardMode 一一映射，但放在 LocationManager 里以便测试时单独使用。
+    public enum GuardProfile: String, Sendable, Equatable {
+        case off       // 完全停采
+        case standard  // 保守档：静止 5 min 心跳 / 移动 15-30 s
+        case realtime  // 高频档：静止 1 min 心跳 / 移动 3-10 s
+
+        public var foregroundAccuracy: CLLocationAccuracy {
+            switch self {
+            case .off:       return kCLLocationAccuracyThreeKilometers
+            case .standard: return kCLLocationAccuracyHundredMeters
+            case .realtime: return kCLLocationAccuracyBestForNavigation
+            }
+        }
+
+        public var backgroundAccuracy: CLLocationAccuracy {
+            switch self {
+            case .off:       return kCLLocationAccuracyThreeKilometers
+            case .standard: return kCLLocationAccuracyHundredMeters
+            case .realtime: return kCLLocationAccuracyNearestTenMeters
+            }
+        }
+
+        /// 距离过滤（米）
+        public var distanceFilter: CLLocationDistance {
+            switch self {
+            case .off:       return kCLDistanceFilterNone
+            case .standard:  return 50
+            case .realtime:  return kCLDistanceFilterNone
+            }
+        }
+
+        /// 静止心跳间隔（秒）—— 即使坐标不变也强制刷新一次
+        public var heartbeatInterval: TimeInterval {
+            switch self {
+            case .off:       return .infinity
+            case .standard:  return 300   // 5 min
+            case .realtime:  return 60    // 1 min
+            }
+        }
+
+        /// 移动时最大上报间隔（秒）—— 即使没到 distanceFilter 也强制刷一次
+        public var maxMovingReportInterval: TimeInterval {
+            switch self {
+            case .off:       return .infinity
+            case .standard:  return 30
+            case .realtime:  return 10
+            }
+        }
+
+        public var allowsBackgroundUpdates: Bool {
+            self != .off
+        }
+
+        public var pausesLocationUpdatesAutomatically: Bool {
+            // realtime 需要关掉（不然静止时系统会停采），standard 让系统自己判断
+            self == .realtime ? false : true
+        }
+    }
+
     public struct CLLocationEvent: Sendable, Equatable {
         public let location: CLLocation
         public let mode: TrackingMode
@@ -53,9 +113,12 @@ public actor LocationManager {
     private var authContinuations: [UUID: AsyncStream<AuthState>.Continuation] = [:]
     private var sessionId: String = UUID().uuidString
     private var mode: TrackingMode = .off
+    private var profile: GuardProfile = .standard
     private var lastReportedLocation: CLLocation?
     private var lastReportedAt: Date?
-    private let throttleInterval: TimeInterval = 5  // 同一坐标 5s 内不重复上送
+    private var lastMovementAt: Date?
+    private let throttleInterval: TimeInterval = 2  // 同一坐标 2s 内不重复上送
+    private var heartbeatTask: Task<Void, Never>?
 
     public static let shared = LocationManager()
 
@@ -64,9 +127,10 @@ public actor LocationManager {
         self.cl = m
         self.delegate = LocationDelegate()
         self.cl.delegate = delegate
-        self.cl.pausesLocationUpdatesAutomatically = true
         self.cl.showsBackgroundLocationIndicator = true
         self.cl.activityType = .otherNavigation
+        // pausesLocationUpdatesAutomatically 由 profile 动态控制
+        self.cl.pausesLocationUpdatesAutomatically = true  // standard 模式默认值
         self.delegate.owner = self
     }
 
@@ -104,8 +168,13 @@ public actor LocationManager {
         }
     }
 
-    /// 启动定位（自动选 mode）。
+    /// 启动定位（按 profile 自动选 mode）。
     public func start() throws {
+        try start(profile: profile)
+    }
+
+    /// 启动定位并指定守护档位。
+    public func start(profile newProfile: GuardProfile) throws {
         let auth = currentAuthState()
         guard auth == .whenInUse || auth == .always else {
             throw LocationError.permissionDenied
@@ -113,22 +182,95 @@ public actor LocationManager {
         guard CLLocationManager.locationServicesEnabled() else {
             throw LocationError.serviceDisabled
         }
-        sessionId = UUID().uuidString
 
-        // 简化：默认前台高精度。CoreLocation 自身会根据授权类型适配后台
-        // 不在 actor 内部调 MainActor.assumeIsolated（Swift 6 严格并发下会 crash）
-        // V0.2 再做精确的前台/后台判定
+        // off 档：完全停采
+        if newProfile == .off {
+            self.profile = .off
+            stop()
+            heartbeatTask?.cancel()
+            heartbeatTask = nil
+            return
+        }
+
+        // 必须先停掉旧的，再切换（不然 pause/resume 切换档位不生效）
+        cl.stopUpdatingLocation()
+        cl.stopMonitoringSignificantLocationChanges()
+
+        self.profile = newProfile
+        sessionId = UUID().uuidString
+        lastMovementAt = Date()
+
         if auth == .always {
             applyMode(.background)
         } else {
             applyMode(.foreground)
         }
+        startHeartbeatLoop()
+    }
+
+    /// 切换守护档位（不重启 App，运行时切换）。
+    public func switchProfile(to newProfile: GuardProfile) {
+        guard newProfile != self.profile else { return }
+        print("[LocationManager] switchProfile: \(self.profile.rawValue) → \(newProfile.rawValue)")
+        try? start(profile: newProfile)
+    }
+
+    /// 暂停 / 恢复采集（不解绑 WS）。
+    public func pause() {
+        print("[LocationManager] pause")
+        cl.stopUpdatingLocation()
+        cl.stopMonitoringSignificantLocationChanges()
+        heartbeatTask?.cancel()
+        heartbeatTask = nil
+        mode = .off
+    }
+
+    public func resume() {
+        print("[LocationManager] resume")
+        try? start()
     }
 
     public func stop() {
         cl.stopUpdatingLocation()
         cl.stopMonitoringSignificantLocationChanges()
+        heartbeatTask?.cancel()
+        heartbeatTask = nil
         mode = .off
+    }
+
+    // MARK: - Heartbeat
+
+    /// 启动心跳 loop：到点强制 yield 一个 lastLocation（即使坐标没变）。
+    /// 让静止场景也能定期上报（standard 5 min / realtime 1 min）。
+    private func startHeartbeatLoop() {
+        heartbeatTask?.cancel()
+        let interval = profile.heartbeatInterval
+        guard interval.isFinite, interval > 0 else { return }
+        heartbeatTask = Task { [weak self] in
+            guard let self = self else { return }
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: UInt64(interval * 1_000_000_000))
+                if Task.isCancelled { break }
+                await self.fireHeartbeat()
+            }
+        }
+        print("[LocationManager] heartbeat loop started: every \(Int(interval))s (profile=\(profile.rawValue))")
+    }
+
+    private func fireHeartbeat() {
+        // 没定位过就不发
+        guard let last = lastReportedLocation else { return }
+        let event = CLLocationEvent(
+            location: last,
+            mode: mode,
+            battery: currentBatteryInfoSync(),
+            sessionId: sessionId
+        )
+        print("[LocationManager] 💓 heartbeat fired (last=\(last.coordinate.latitude), \(last.coordinate.longitude))")
+        for cont in continuations.values {
+            cont.yield(event)
+        }
+        lastReportedAt = Date()
     }
 
     /// 订阅定位事件（多个订阅者允许共存）。
@@ -172,15 +314,33 @@ public actor LocationManager {
 
     fileprivate func handleLocations(_ locations: [CLLocation]) {
         for loc in locations {
-            // 节流
+            let now = Date()
+
+            // 节流：同坐标 2s 内不重复
             if let last = lastReportedLocation,
                let lastAt = lastReportedAt,
-               loc.distance(from: last) < 10,
-               Date().timeIntervalSince(lastAt) < throttleInterval {
+               loc.distance(from: last) < 5,
+               now.timeIntervalSince(lastAt) < throttleInterval {
                 continue
             }
+
+            // 移动检测：记录最近一次移动
+            let isMoving = lastReportedLocation.map { loc.distance(from: $0) > profile.distanceFilter } ?? false
+            if isMoving {
+                lastMovementAt = now
+            }
+
+            // 强制上报节流：移动模式下，超过 maxMovingReportInterval 必须报一次
+            let sinceLastReport = lastReportedAt.map { now.timeIntervalSince($0) } ?? .infinity
+            let forceReport = isMoving && sinceLastReport > profile.maxMovingReportInterval
+
+            if !isMoving && !forceReport && lastReportedLocation != nil {
+                // 没移动 + 没到强制时间 + 之前报过 → 跳过（心跳由 fireHeartbeat 兜底）
+                continue
+            }
+
             lastReportedLocation = loc
-            lastReportedAt = Date()
+            lastReportedAt = now
 
             let event = CLLocationEvent(
                 location: loc,
@@ -213,26 +373,35 @@ public actor LocationManager {
 
     private func applyMode(_ newMode: TrackingMode) {
         mode = newMode
+        // 关键：先把 allowsBackgroundLocationUpdates 关掉（切 foreground 时），否则会 crash
+        // iOS 16+ 会校验：当前不是 background mode 但 allowsBackgroundLocationUpdates=true 就崩
         switch newMode {
         case .off:
             cl.stopUpdatingLocation()
             cl.stopMonitoringSignificantLocationChanges()
+            cl.allowsBackgroundLocationUpdates = false
+
         case .foreground:
             cl.stopMonitoringSignificantLocationChanges()
-            cl.desiredAccuracy = kCLLocationAccuracyBest
-            cl.distanceFilter = 5
             cl.allowsBackgroundLocationUpdates = false
+            cl.desiredAccuracy = profile.foregroundAccuracy
+            cl.distanceFilter = profile.distanceFilter
+            cl.pausesLocationUpdatesAutomatically = profile.pausesLocationUpdatesAutomatically
             cl.startUpdatingLocation()
+
         case .background:
-            cl.desiredAccuracy = kCLLocationAccuracyHundredMeters
-            cl.distanceFilter = 50
-            cl.allowsBackgroundLocationUpdates = true
+            cl.desiredAccuracy = profile.backgroundAccuracy
+            cl.distanceFilter = profile.distanceFilter
+            cl.allowsBackgroundLocationUpdates = profile.allowsBackgroundUpdates
+            cl.pausesLocationUpdatesAutomatically = profile.pausesLocationUpdatesAutomatically
             cl.startUpdatingLocation()
+
         case .significantChange:
             cl.stopUpdatingLocation()
             cl.allowsBackgroundLocationUpdates = true
             cl.startMonitoringSignificantLocationChanges()
         }
+        print("[LocationManager] applyMode(\(newMode.rawValue)) profile=\(profile.rawValue) accuracy=\(cl.desiredAccuracy) filter=\(cl.distanceFilter)")
     }
 
     private func waitForAuthChange(timeout: TimeInterval = 30) async -> AuthState {

@@ -70,6 +70,7 @@ public struct RealtimeMapScreen: View {
         ScrollView {
             VStack(spacing: 14) {
                 StatusBar()
+                GuardBanner(settings: session.guardSettings)
                 PartnerHero(
                     name: store.partner?.displayName ?? "小月亮",
                     avatar: "👧🏻",

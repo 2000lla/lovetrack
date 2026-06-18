@@ -261,22 +261,17 @@ public struct PairScreen: View {
         errorMessage = nil
         defer { isLoading = false }
 
-        #if DEBUG
-        // DEBUG 模式：本地直接生成 6 位码,不走后端
-        let code = String(format: "%06d", Int.random(in: 0..<1_000_000))
-        inviteCode = code
-        mode = .create
-        return
-        #else
+        // DEBUG 和 RELEASE 都走后端真配对 —— 两台真机测试时需要 server 知道谁跟谁配对了
+        // 才能在 location_update 时把 partner_location 推给对方
         do {
-            // 走 RelationshipStore 让 store 正确记录 pending 关系 + isPaired = true
             let code = try await session.relationshipStore.generatePairCode()
             inviteCode = code
             mode = .create
+            print("[PairScreen] ✅ 创建邀请码成功: \(code)")
         } catch {
             errorMessage = "创建失败: \(error.localizedDescription)"
+            print("[PairScreen] ❌ 创建邀请码失败: \(error)")
         }
-        #endif
     }
 
     private func joinWithCode() async {
@@ -284,21 +279,15 @@ public struct PairScreen: View {
         errorMessage = nil
         defer { isLoading = false }
 
-        #if DEBUG
-        // DEBUG 模式：输任意 6 位 → 触发 DevMock 配对,跳过真后端
-        if inputCode.count == 6 {
-            DevMock.bootstrapIfNeeded(session: session, store: session.relationshipStore)
-            session.completePairing()
-            return
-        }
-        #endif
-
+        // DEBUG 和 RELEASE 都走后端真绑定 —— 输任意 6 位并不会通过，
+        // 后端只接受由 /bind 生成的真实邀请码
         do {
-            // 走 RelationshipStore 让它正确刷 isPaired / 订阅 partner
             try await session.relationshipStore.acceptPairCode(inputCode)
             session.completePairing()
+            print("[PairScreen] ✅ 绑定成功: code=\(inputCode)")
         } catch {
             errorMessage = "绑定失败: \(error.localizedDescription)"
+            print("[PairScreen] ❌ 绑定失败: \(error)")
         }
     }
 }

@@ -45,6 +45,18 @@ targets:
       - path: Network
       - path: Relationship
       - path: UI
+    # AMap.bundle 必须放进主 App Bundle (高德 SDK 内部用 [NSBundle mainBundle] 找资源)
+    # 仅靠 framework embed 不会触发 copy，通过 build phase 脚本解决
+    postCompileScripts:
+      - name: "Copy AMap Bundle Resources"
+        script: |
+          set -e
+          SRC="${SRCROOT}/Vendor/AMap/MAMapKit.framework/AMap.bundle"
+          DST="${CODESIGNING_FOLDER_PATH}/AMap.bundle"
+          if [ -d "$SRC" ] && [ ! -d "$DST" ]; then
+            echo "Copying AMap resources → ${DST}"
+            cp -R "$SRC" "$DST"
+          fi
     # Secrets (API keys 等) 走独立 xcconfig，已 gitignore
     # 缺失时 xcodegen 仍能 generate, 但编译会因 key 为空失败
     configFiles:
@@ -85,9 +97,10 @@ targets:
           - UIInterfaceOrientationPortrait
         # ---- CoreLocation 三件套 (iOS 16+) ----
         # 见 architecture.md §5 App Store 审核合规
-        NSLocationWhenInUseUsageDescription: "我们需要在 App 打开时获取你的位置，用于显示你与伴侣的实时距离。位置数据仅在 App 运行时使用，不会用于广告。"
-        NSLocationAlwaysAndWhenInUseUsageDescription: '开启"始终"权限后，即便 App 在后台或锁屏，我们也能持续为你和伴侣更新位置，守护彼此安全。我们采用 Apple 推荐的 CoreLocation 后台服务模式，仅在位置发生显著变化时上报，不会持续高频采集。'
-        NSLocationAlwaysUsageDescription: "保留此字段以兼容 iOS 10 设备。我们仅在位置发生显著变化时上报位置，不会持续高频采集。"
+        # 文案要点：说清楚「为什么需要」「不开放会怎样」「数据用途」「用户控制权」
+        NSLocationWhenInUseUsageDescription: "LoveTrack 是一款情侣位置共享 App。我们需要获取你的位置，用于：① 显示你与伴侣的实时距离 ② 在你到达或离开常用地点时提醒伴侣。位置数据仅用于你和你的伴侣之间共享，不会上传给任何第三方，也不会用于广告。"
+        NSLocationAlwaysAndWhenInUseUsageDescription: "开启「始终」权限后，LoveTrack 才能在后台或锁屏时持续为你更新位置，让伴侣随时看到你所在区域（如是否已安全到家、是否仍在路上）。\n\n📍 **采集方式**：默认采用「标准守护」模式（保守档），后台静止时每 5 分钟发送一次心跳，移动时 15-30 秒更新一次，电量影响极小。如需更高频率，可手动开启「实时守护」（后台 1 分钟心跳 + 移动 3-10 秒更新）。\n\n🛑 **你的控制权**：你随时可以在「设置-守护」中切换档位、一键暂停共享 1 小时、或暂停到明早 8 点。后台定位可能显著降低电池续航。\n\n🔒 **隐私承诺**：位置数据仅你和你的伴侣可见，加密传输，绝不用于广告或第三方。"
+        NSLocationAlwaysUsageDescription: "保留此字段以兼容 iOS 10 设备。我们仅在你主动开启位置共享时才会采集位置，你随时可在 App 内关闭。"
         # ---- 后台运行模式 ----
         UIBackgroundModes:
           - location
@@ -97,11 +110,17 @@ targets:
           - com.lovetrack.app.refresh
         # ---- 高德 SDK Key (从 Secrets.xcconfig 注入, 不进 git) ----
         AMapAPIKey: $(AMAP_API_KEY)
+        # ---- 后端地址 (从 Secrets.xcconfig 注入, 不进 git, xcodegen regenerate 不会丢) ----
+        BackendURL: $(LOVETRACK_BACKEND_URL)
         # ---- App Transport Security (允许明文 HTTP，连接到本地后端) ----
         # 生产环境务必用 HTTPS，仅开发期允许任意加载
         NSAppTransportSecurity:
           NSAllowsArbitraryLoads: true
           NSAllowsLocalNetworking: true
+          NSExceptionDomains:
+            "YOUR_SERVER_IP":
+              NSExceptionAllowsInsecureHTTPLoads: true
+              NSIncludesSubdomains: false
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.lovetrack.app
@@ -112,6 +131,7 @@ targets:
         CODE_SIGN_STYLE: Automatic
         CODE_SIGNING_REQUIRED: YES
         CODE_SIGNING_ALLOWED: YES
+        DEVELOPMENT_TEAM: "2CG772X26Z"
         # 高德 SDK 用了 Objective-C 类别(category), 必须 -ObjC 才能让所有符号被链接
         OTHER_LDFLAGS: "-ObjC"
         # 高德 MAMapKit.framework 暂未提供 arm64-simulator slice (2026-06 下载的版本)
