@@ -128,6 +128,46 @@ app.get('/location/:userId', (req, res) => {
 });
 
 /**
+ * GET /me?userId=xxx
+ * Returns: { userId, relationship: {...} | null, partner: {id,name} | null, lastKnownLocation: {...} | null }
+ *
+ * 用于 iOS 启动时恢复"我是不是 paired 状态"。in-memory 存储没法做这个,
+ * 启动时直接查一下后端就知道。
+ */
+app.get('/me', (req, res) => {
+  const userId = req.query.userId;
+  if (!userId) {
+    return res.status(400).json({ error: 'userId query param required' });
+  }
+  // 找关系
+  let rel = null;
+  let partnerId = null;
+  for (const r of relationships.values()) {
+    if (r.status !== 'paired') continue;
+    if (r.inviterId === userId) { partnerId = r.inviteeId; rel = r; break; }
+    if (r.inviteeId === userId) { partnerId = r.inviterId; rel = r; break; }
+  }
+  const partner = partnerId ? { id: partnerId, name: partnerId } : null;
+  const partnerLoc = partnerId ? (locations.get(partnerId) || null) : null;
+  // 自己最后位置
+  const myLoc = locations.get(userId) || null;
+  res.json({
+    userId,
+    relationship: rel ? {
+      id: `rel_${rel.inviterId}_${rel.inviteeId}`,
+      inviterId: rel.inviterId,
+      inviteeId: rel.inviteeId,
+      status: rel.status,
+      pairedAt: rel.pairedAt,
+    } : null,
+    partner,
+    lastKnownPartnerLocation: partnerLoc,
+    myLastLocation: myLoc,
+    isOnline: sockets.has(userId),
+  });
+});
+
+/**
  * GET /status — 详细状态 JSON（供仪表盘消费）
  */
 app.get('/status', (_req, res) => {
@@ -401,12 +441,29 @@ wss.on('connection', (ws, req) => {
   console.log(`[ws] connected userId=${userId}`);
   sockets.set(userId, ws);
 
-  // 推送对方最近位置（如有）
+  // 1) 推送对方最近位置（如有）
   const partner = findPartner(userId);
   if (partner) {
     const partnerLoc = locations.get(partner);
     if (partnerLoc) {
       ws.send(JSON.stringify({ type: 'partner_location', payload: partnerLoc }));
+    }
+  }
+
+  // 2) 如果已 paired 但之前漏掉了 pair_success 推送(WS 还没连就被 pair),
+  //    在 WS 连接时补推一次。iOS 端靠这个恢复状态。
+  for (const rel of relationships.values()) {
+    if (rel.status !== 'paired') continue;
+    let partnerId = null;
+    if (rel.inviterId === userId) partnerId = rel.inviteeId;
+    else if (rel.inviteeId === userId) partnerId = rel.inviterId;
+    if (partnerId) {
+      ws.send(JSON.stringify({
+        type: 'pair_success',
+        payload: { inviteeId: partnerId, inviteeName: partnerId },
+      }));
+      console.log(`[ws:PUSH] pair_success (replay) → ${userId} (partner=${partnerId})`);
+      break;  // 只可能有一个 paired rel
     }
   }
 

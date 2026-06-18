@@ -16,7 +16,7 @@ import Foundation
 ///
 /// 上线 HTTPS：换成 `https://api.lovetrack.app`。
 public struct BackendConfig {
-    /// 编译默认后端地址占位符。Release 时改成 `https://api.lovetrack.app`。
+    /// 开发期编译默认后端地址占位符。
     /// ⚠️ 提交前保持占位符，不要把真实 IP 写在这里。
     private static let defaultBackendURL = "http://YOUR_SERVER_IP:3000"
 

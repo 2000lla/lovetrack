@@ -320,6 +320,81 @@ public final class HTTPRealtimeSyncService: RealtimeSyncServiceProtocol, @unchec
         return point
     }
 
+    /// App 启动时拉取自己的关系状态（用于恢复"我是不是 paired"）。
+    /// GET /me?userId=xxx → { userId, relationship, partner, lastKnownPartnerLocation, myLastLocation, isOnline }
+    /// 返回 nil 表示当前未 paired。
+    public func fetchMyState() async throws -> MyState? {
+        var comps = URLComponents(url: BackendConfig.baseURL, resolvingAgainstBaseURL: false)!
+        comps.path = "/me"
+        comps.queryItems = [URLQueryItem(name: "userId", value: userId)]
+        guard let url = comps.url else { return nil }
+        var req = URLRequest(url: url)
+        req.httpMethod = "GET"
+        req.timeoutInterval = 5
+
+        Log.info("HTTPRealtime", "GET \(url.absoluteString)")
+        let (data, resp) = try await session.data(for: req)
+        guard let http = resp as? HTTPURLResponse else {
+            Log.warn("HTTPRealtime", "fetchMyState: no http response")
+            return nil
+        }
+        guard (200..<300).contains(http.statusCode) else {
+            let body = String(data: data, encoding: .utf8) ?? ""
+            Log.warn("HTTPRealtime", "fetchMyState: HTTP \(http.statusCode) \(body)")
+            throw ServiceError.httpStatus(http.statusCode, body)
+        }
+        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            Log.warn("HTTPRealtime", "fetchMyState: bad payload")
+            return nil
+        }
+        let relJson = json["relationship"] as? [String: Any]
+        guard let relJson = relJson,
+              let inviterId = relJson["inviterId"] as? String,
+              let inviteeId = relJson["inviteeId"] as? String,
+              let statusStr = relJson["status"] as? String,
+              statusStr == "active" || statusStr == "paired" else {
+            Log.info("HTTPRealtime", "fetchMyState: not paired")
+            return nil
+        }
+        let partnerId = (inviterId == userId) ? inviteeId : inviterId
+        let rel = Relationship(
+            id: relJson["id"] as? String ?? "rel_\(inviterId)_\(inviteeId)",
+            userA: inviterId,
+            userB: inviteeId,
+            status: .active,
+            pairedAt: Date()
+        )
+
+        // 解析 partner lastLocation（如果有）
+        var partnerLoc: LocationPoint?
+        if let pl = json["lastKnownPartnerLocation"] as? [String: Any],
+           let plat = pl["lat"] as? Double,
+           let plng = pl["lng"] as? Double {
+            let pbatt = pl["battery"] as? Double ?? 1.0
+            let ptsMs = pl["timestamp"] as? TimeInterval ?? Date().timeIntervalSince1970 * 1000
+            partnerLoc = LocationPoint(
+                userId: partnerId,
+                lat: plat,
+                lon: plng,
+                altitude: 0, horizontalAccuracy: 0, verticalAccuracy: 0,
+                speed: -1, course: -1,
+                timestamp: Date(timeIntervalSince1970: ptsMs / 1000),
+                receivedAt: Date(),
+                battery: BatteryInfo(level: pbatt, isCharging: false, isLowPower: false),
+                source: .gps, sessionId: ""
+            )
+        }
+
+        Log.info("HTTPRealtime", "fetchMyState: ✅ paired with \(partnerId), hasPartnerLoc=\(partnerLoc != nil)")
+        return MyState(relationship: rel, partnerId: partnerId, lastKnownPartnerLocation: partnerLoc)
+    }
+
+    public struct MyState: Sendable {
+        public let relationship: Relationship
+        public let partnerId: String
+        public let lastKnownPartnerLocation: LocationPoint?
+    }
+
     /// 实际的 partner userId 缓存（acceptPairInvite 或 pair_success 时设置）。
     /// 修这个之前 observePartnerLocation(userId: "partner") 是个 magic string，
     /// 实际 RelationshipStore.startObservingPartner 用的是真 partner UUID，对不上。

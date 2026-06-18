@@ -19,15 +19,10 @@ struct LoveTrackApp: App {
                 .environmentObject(session)
                 .environmentObject(session.relationshipStore)
                 .task {
-                    // 兜底：bootstrap 失败不能导致 App 崩
-                    do {
-                        try await session.bootstrap()
-                    } catch {
-                        Log.error("LoveTrackApp", "bootstrap failed: \(error)")
-                    }
+                    await session.bootstrap()
                 }
         }
-        .onChange(of: scenePhase) { phase in
+        .onChange(of: scenePhase) { _, phase in
             switch phase {
             case .background:
                 session.handleEnterBackground()
@@ -112,6 +107,9 @@ final class AppSession: ObservableObject {
         if let http = realtime as? HTTPRealtimeSyncService {
             await http.bootstrapConnect()
         }
+        // 3.5 从后端恢复关系状态（in-memory 存储 → App 启动必须查一次）
+        //     修这个之前: 重启 App 后 PairScreen 永远卡住,因为 WS pair_success 漏推
+        await recoverRelationshipFromServer()
         // 4. 订阅定位 → 同步到云（不管 mode 是什么都要订阅，因为 mode=off 时会 stop，事件不会来）
         locationTask?.cancel()
         locationTask = Task { [weak self] in
@@ -146,6 +144,33 @@ final class AppSession: ObservableObject {
         // 8. 暂停到期检查（每分钟跑一次）
         startPauseCheckLoop()
         isReady = true
+    }
+
+    /// 启动时从后端拉一次"我的关系状态",避免 server 重启 / App 重启后 PairScreen 卡死。
+    /// 后端 in-memory 存储,Server 进程死了数据就没了,但 iOS 这边的 PairScreen 状态需要主动同步。
+    @MainActor
+    private func recoverRelationshipFromServer() async {
+        guard let http = realtime as? HTTPRealtimeSyncService else { return }
+        do {
+            guard let state = try await http.fetchMyState() else {
+                Log.info("AppSession", "recover: not paired (clean start)")
+                return
+            }
+            Log.info("AppSession", "recover: ✅ paired with \(state.partnerId), restoring session")
+            currentRelationship = state.relationship
+            relationshipStore.relationship = state.relationship
+            relationshipStore.partner = User(id: state.partnerId, displayName: "伴侣")
+            relationshipStore.isPaired = true
+            isPaired = true
+            http.setPartnerKey(state.partnerId)
+            if let loc = state.lastKnownPartnerLocation {
+                relationshipStore.refreshPartnerLocation(loc)
+            }
+            // 触发 RelationshipStore 订阅
+            await relationshipStore.startObservingPartner()
+        } catch {
+            Log.warn("AppSession", "recover: failed (offline? \(error))")
+        }
     }
 
     /// 根据 guardSettings 把 LocationManager 切到对应档位。
